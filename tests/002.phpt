@@ -1,5 +1,5 @@
 --TEST--
-study_php_extension_test1() Basic test
+Check study_php_extension_dump function print value
 --SKIPIF--
 <?php
 if (!extension_loaded('study_php_extension')) {
@@ -8,10 +8,11 @@ if (!extension_loaded('study_php_extension')) {
 ?>
 --FILE--
 <?php
-$ret = study_php_extension_test1();
-
-var_dump($ret);
+study_php_extension_dump(null);
+study_php_extension_dump(true);
+study_php_extension_dump(false);
 ?>
 --EXPECT--
-The extension study_php_extension is loaded and working!
-NULL
+NULL: null
+BOOL: true
+BOOL: false

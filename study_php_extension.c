@@ -7,7 +7,6 @@
 #include "php.h"
 #include "ext/standard/info.h"
 #include "php_study_php_extension.h"
-#include "study_php_extension_arginfo.h"
 
 /* For compatibility with older PHP versions */
 #ifndef ZEND_PARSE_PARAMETERS_NONE
@@ -16,34 +15,33 @@
 	ZEND_PARSE_PARAMETERS_END()
 #endif
 
-/* {{{ void study_php_extension_test1()
+/* {{{ void study_php_extension_dump( [ mixed $var ] )
  */
-PHP_FUNCTION(study_php_extension_test1)
+PHP_FUNCTION(study_php_extension_dump)
 {
-	ZEND_PARSE_PARAMETERS_NONE();
+	zval *zv_ptr;
+	int argc;
 
-	php_printf("The extension %s is loaded and working!\r\n", "study_php_extension");
-}
-/* }}} */
-
-/* {{{ string study_php_extension_test2( [ string $var ] )
- */
-PHP_FUNCTION(study_php_extension_test2)
-{
-	char *var = "World";
-	size_t var_len = sizeof("World") - 1;
-	zend_string *retval;
-
-	ZEND_PARSE_PARAMETERS_START(0, 1)
-		Z_PARAM_OPTIONAL
-		Z_PARAM_STRING(var, var_len)
+	ZEND_PARSE_PARAMETERS_START(1, 1)
+		Z_PARAM_VARIADIC('+', zv_ptr, argc)
 	ZEND_PARSE_PARAMETERS_END();
 
-	retval = strpprintf(0, "Hello %s", var);
-
-	RETURN_STR(retval);
+	switch(Z_TYPE_P(zv_ptr))
+	{
+		case IS_NULL:
+			php_printf("NULL: null\n");
+			break;
+		case IS_TRUE:
+			php_printf("BOOL: true\n");
+			break;
+		case IS_FALSE:
+			php_printf("BOOL: false\n");
+			break;
+		default:
+			php_printf("UNKNOWN\n");
+			break;
+	}
 }
-/* }}}*/
 
 /* {{{ PHP_RINIT_FUNCTION
  */
@@ -70,8 +68,7 @@ PHP_MINFO_FUNCTION(study_php_extension)
 /* {{{ study_php_extension_functions[]
  */
 static const zend_function_entry study_php_extension_functions[] = {
-	PHP_FE(study_php_extension_test1,		arginfo_study_php_extension_test1)
-	PHP_FE(study_php_extension_test2,		arginfo_study_php_extension_test2)
+	PHP_FE(study_php_extension_dump,		NULL)
 	PHP_FE_END
 };
 /* }}} */
