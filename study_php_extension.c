@@ -37,6 +37,9 @@ PHP_FUNCTION(study_php_extension_dump)
 		case IS_FALSE:
 			php_printf("BOOL: false\n");
 			break;
+		case IS_LONG:
+			php_printf("LONG: %ld\n", Z_LVAL_P(zv_ptr));
+			break;
 		default:
 			php_printf("UNKNOWN\n");
 			break;
