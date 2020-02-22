@@ -19,6 +19,9 @@ study_php_extension_dump(-2.0);
 study_php_extension_dump("Hello World");
 study_php_extension_dump("");
 study_php_extension_dump(fopen("/dev/null", "r"));
+study_php_extension_dump(array());
+study_php_extension_dump(array(1, 2, 3, 4, 5));
+study_php_extension_dump(array(1, 2, array(3), array(4), 5));
 ?>
 --EXPECT--
 NULL: null
@@ -31,4 +34,36 @@ DOUBLE: 2.0
 DOUBLE: -2.0
 STRING: value="Hello World", length=11
 STRING: value="", length=0
-RESOURCE: id=5 type=file
+RESOURCE: id=5 type=stream
+ARRAY(0) {
+}
+ARRAY(5) {
+  [0]=>
+  LONG: 1
+  [1]=>
+  LONG: 2
+  [2]=>
+  LONG: 3
+  [3]=>
+  LONG: 4
+  [4]=>
+  LONG: 5
+}
+ARRAY(5) {
+  [0]=>
+  LONG: 1
+  [1]=>
+  LONG: 2
+  [2]=>
+  ARRAY(1) {
+    [0]=>
+    LONG: 3
+  }
+  [3]=>
+  ARRAY(1) {
+    [0]=>
+    LONG: 4
+  }
+  [4]=>
+  LONG: 5
+}

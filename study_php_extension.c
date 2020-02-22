@@ -18,6 +18,15 @@
 PHPAPI void study_php_extension_var_dump(zval *struc, int level) /* {{{ */
 {
 	char tmp_str[PHP_DOUBLE_MAX_LENGTH];
+	uint32_t count;
+	HashTable *myht;
+	zend_ulong num;
+	zend_string *key;
+	zval *val;
+
+	if (level > 1) {
+		php_printf("%*c", level - 1, ' ');
+	}
 
 	switch(Z_TYPE_P(struc))
 	{
@@ -52,7 +61,25 @@ PHPAPI void study_php_extension_var_dump(zval *struc, int level) /* {{{ */
 			break;
 		}
 		case IS_ARRAY:
-			php_printf("ARRAY: hashtable=%p\n", Z_ARRVAL_P(struc));
+			myht = Z_ARRVAL_P(struc);
+			count = zend_array_count(myht);
+			php_printf("ARRAY(%d) {\n", count);
+
+			ZEND_HASH_FOREACH_KEY_VAL_IND(myht, num, key, val) {
+				if (key == NULL) { /* numeric key */
+					php_printf("%*c[" ZEND_LONG_FMT "]=>\n", level + 1, ' ', num);
+				} else { /* string key */
+					php_printf("%*c[\"", level + 1, ' ');
+					PHPWRITE(ZSTR_VAL(key), ZSTR_LEN(key));
+					php_printf("\"]=>\n");
+				}
+				study_php_extension_var_dump(val, level + 2);
+			} ZEND_HASH_FOREACH_END();
+
+			if (level > 1) {
+				php_printf("%*c", level - 1, ' ');
+			}
+			PUTS("}\n");
 			break;
 		case IS_OBJECT:
 			php_printf("OBJECT: ???\n");
