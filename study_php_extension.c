@@ -23,11 +23,13 @@ PHPAPI void study_php_extension_var_dump(zval *struc, int level) /* {{{ */
 	zend_ulong num;
 	zend_string *key;
 	zval *val;
+	zend_string *class_name;
 
 	if (level > 1) {
 		php_printf("%*c", level - 1, ' ');
 	}
 
+/* again: */
 	switch(Z_TYPE_P(struc))
 	{
 		case IS_NULL:
@@ -82,8 +84,63 @@ PHPAPI void study_php_extension_var_dump(zval *struc, int level) /* {{{ */
 			PUTS("}\n");
 			break;
 		case IS_OBJECT:
-			php_printf("OBJECT: ???\n");
+			myht = zend_get_properties_for(struc, ZEND_PROP_PURPOSE_DEBUG);
+			class_name = Z_OBJ_HANDLER_P(struc, get_class_name)(Z_OBJ_P(struc));
+
+			php_printf("OBJECT(%s)#%d (%d) {\n", ZSTR_VAL(class_name), Z_OBJ_HANDLE_P(struc), myht ? zend_array_count(myht) : 0);
+
+			if (myht) {
+				ZEND_HASH_FOREACH_KEY_VAL_IND(myht, num, key, val) {
+					zend_property_info *prop_info = NULL;
+
+					if (Z_TYPE_P(val) == IS_INDIRECT) {
+						val = Z_INDIRECT_P(val);
+						if (key) {
+							prop_info = zend_get_typed_property_info_for_slot(Z_OBJ_P(struc), val);
+						}
+					}
+
+					if (!Z_ISUNDEF_P(val) || prop_info) { /* TODO: Is need Z_ISUNDEF_P? */
+						const char *object_prop_name, *object_class_name;
+
+						if (key == NULL) { /* numeric key */
+							php_printf("%*c[" ZEND_LONG_FMT "]=>\n", level + 1, ' ', num);
+						} else { /* string key */
+							int unmangle = zend_unmangle_property_name(key, &object_class_name, &object_prop_name);
+							php_printf("%*c[", level + 1, ' ');
+
+							if (object_class_name && unmangle == SUCCESS) {
+								if (object_class_name[0] == '*') {
+									php_printf("\"%s\":protected", object_prop_name);
+								} else {
+									php_printf("\"%s\":\"%s\":private", object_prop_name, object_class_name);
+								}
+							} else {
+								php_printf("\"");
+								PHPWRITE(ZSTR_VAL(key), ZSTR_LEN(key));
+								php_printf("\"");
+							}
+							ZEND_PUTS("]=>\n");
+						}
+
+						study_php_extension_var_dump(val, level + 2);
+					}
+				} ZEND_HASH_FOREACH_END();
+				zend_release_properties(myht); /* must: Release myht */
+			}
+
+			zend_string_release_ex(class_name, 0);
+			if (level > 1) {
+				php_printf("%*c", level - 1, ' ');
+			}
+			PUTS("}\n");
 			break;
+		/* TODO: Should be add recursion protection.
+		case IS_REFERENCE:
+			struc = Z_REFVAL_P(struc);
+			goto again;
+			break;
+		*/
 		default:
 			php_printf("UNKNOWN\n");
 			break;
