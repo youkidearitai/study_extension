@@ -22,6 +22,7 @@ study_php_extension_dump(fopen("/dev/null", "r"));
 study_php_extension_dump(array());
 study_php_extension_dump(array(1, 2, 3, 4, 5));
 study_php_extension_dump(array(1, 2, array(3), array(4), 5));
+study_php_extension_dump(new stdClass());
 ?>
 --EXPECT--
 NULL: null
@@ -66,4 +67,6 @@ ARRAY(5) {
   }
   [4]=>
   LONG: 5
+}
+OBJECT(stdClass)#1 (0) {
 }

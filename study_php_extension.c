@@ -29,7 +29,7 @@ PHPAPI void study_php_extension_var_dump(zval *struc, int level) /* {{{ */
 		php_printf("%*c", level - 1, ' ');
 	}
 
-/* again: */
+again:
 	switch(Z_TYPE_P(struc))
 	{
 		case IS_NULL:
@@ -64,6 +64,14 @@ PHPAPI void study_php_extension_var_dump(zval *struc, int level) /* {{{ */
 		}
 		case IS_ARRAY:
 			myht = Z_ARRVAL_P(struc);
+			/* recursion protection */
+			if (level > 1 && !(GC_FLAGS(myht) & GC_IMMUTABLE)) {
+				if (GC_IS_RECURSIVE(myht)) {
+					PUTS("*RECURSION*\n");
+					return;
+				}
+				GC_PROTECT_RECURSION(myht);
+			}
 			count = zend_array_count(myht);
 			php_printf("ARRAY(%d) {\n", count);
 
@@ -78,12 +86,23 @@ PHPAPI void study_php_extension_var_dump(zval *struc, int level) /* {{{ */
 				study_php_extension_var_dump(val, level + 2);
 			} ZEND_HASH_FOREACH_END();
 
+			if (level > 1 && !(GC_FLAGS(myht) & GC_IMMUTABLE)) {
+				GC_UNPROTECT_RECURSION(myht);
+			}
+
 			if (level > 1) {
 				php_printf("%*c", level - 1, ' ');
 			}
 			PUTS("}\n");
 			break;
 		case IS_OBJECT:
+			/* recursion protection */
+			if (Z_IS_RECURSIVE_P(struc)) {
+				PUTS("*RECURSION*\n");
+				return;
+			}
+			Z_PROTECT_RECURSION_P(struc);
+
 			myht = zend_get_properties_for(struc, ZEND_PROP_PURPOSE_DEBUG);
 			class_name = Z_OBJ_HANDLER_P(struc, get_class_name)(Z_OBJ_P(struc));
 
@@ -134,13 +153,12 @@ PHPAPI void study_php_extension_var_dump(zval *struc, int level) /* {{{ */
 				php_printf("%*c", level - 1, ' ');
 			}
 			PUTS("}\n");
+			Z_UNPROTECT_RECURSION_P(struc); /* unprotect recursion */
 			break;
-		/* TODO: Should be add recursion protection.
 		case IS_REFERENCE:
 			struc = Z_REFVAL_P(struc);
 			goto again;
 			break;
-		*/
 		default:
 			php_printf("UNKNOWN\n");
 			break;
