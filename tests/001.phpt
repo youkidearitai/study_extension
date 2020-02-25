@@ -1,14 +1,14 @@
 --TEST--
-Check if study_php_extension is loaded
+Check if study_extension is loaded
 --SKIPIF--
 <?php
-if (!extension_loaded('study_php_extension')) {
+if (!extension_loaded('study_extension')) {
 	echo 'skip';
 }
 ?>
 --FILE--
 <?php
-echo 'The extension "study_php_extension" is available';
+echo 'The extension "study_extension" is available';
 ?>
 --EXPECT--
-The extension "study_php_extension" is available
+The extension "study_extension" is available

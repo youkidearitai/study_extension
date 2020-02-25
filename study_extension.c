@@ -1,4 +1,4 @@
-/* study_php_extension extension for PHP */
+/* study_extension extension for PHP */
 
 #ifdef HAVE_CONFIG_H
 # include "config.h"
@@ -6,7 +6,7 @@
 
 #include "php.h"
 #include "ext/standard/info.h"
-#include "php_study_php_extension.h"
+#include "php_study_extension.h"
 
 /* For compatibility with older PHP versions */
 #ifndef ZEND_PARSE_PARAMETERS_NONE
@@ -15,7 +15,7 @@
 	ZEND_PARSE_PARAMETERS_END()
 #endif
 
-PHPAPI void study_php_extension_var_dump(zval *struc, int level) /* {{{ */
+PHPAPI void study_extension_var_dump(zval *struc, int level) /* {{{ */
 {
 	char tmp_str[PHP_DOUBLE_MAX_LENGTH];
 	uint32_t count;
@@ -83,7 +83,7 @@ again:
 					PHPWRITE(ZSTR_VAL(key), ZSTR_LEN(key));
 					php_printf("\"]=>\n");
 				}
-				study_php_extension_var_dump(val, level + 2);
+				study_extension_var_dump(val, level + 2);
 			} ZEND_HASH_FOREACH_END();
 
 			if (level > 1 && !(GC_FLAGS(myht) & GC_IMMUTABLE)) {
@@ -142,7 +142,7 @@ again:
 							ZEND_PUTS("]=>\n");
 						}
 
-						study_php_extension_var_dump(val, level + 2);
+						study_extension_var_dump(val, level + 2);
 					}
 				} ZEND_HASH_FOREACH_END();
 				zend_release_properties(myht); /* must: Release myht */
@@ -166,9 +166,9 @@ again:
 }
 /* }}} */
 
-/* {{{ void study_php_extension_dump( [ mixed $var ] )
+/* {{{ void study_extension_dump( mixed $var )
  */
-PHP_FUNCTION(study_php_extension_dump)
+PHP_FUNCTION(study_extension_dump)
 {
 	zval *zv_ptr;
 	int argc, i;
@@ -178,15 +178,15 @@ PHP_FUNCTION(study_php_extension_dump)
 	ZEND_PARSE_PARAMETERS_END();
 
 	for (i = 0; i < argc; i++) {
-		study_php_extension_var_dump(&zv_ptr[i], 1);
+		study_extension_var_dump(&zv_ptr[i], 1);
 	}
 }
 
 /* {{{ PHP_RINIT_FUNCTION
  */
-PHP_RINIT_FUNCTION(study_php_extension)
+PHP_RINIT_FUNCTION(study_extension)
 {
-#if defined(ZTS) && defined(COMPILE_DL_STUDY_PHP_EXTENSION)
+#if defined(ZTS) && defined(COMPILE_DL_STUDY_EXTENSION)
 	ZEND_TSRMLS_CACHE_UPDATE();
 #endif
 
@@ -196,41 +196,48 @@ PHP_RINIT_FUNCTION(study_php_extension)
 
 /* {{{ PHP_MINFO_FUNCTION
  */
-PHP_MINFO_FUNCTION(study_php_extension)
+PHP_MINFO_FUNCTION(study_extension)
 {
 	php_info_print_table_start();
-	php_info_print_table_header(2, "study_php_extension support", "enabled");
+	php_info_print_table_header(2, "study_extension support", "enabled");
 	php_info_print_table_end();
 }
 /* }}} */
 
-/* {{{ study_php_extension_functions[]
+/* {{{ arginfo
  */
-static const zend_function_entry study_php_extension_functions[] = {
-	PHP_FE(study_php_extension_dump,		NULL)
+ZEND_BEGIN_ARG_INFO(arginfo_study_extension_dump, 0)
+	ZEND_ARG_INFO(0, value)
+ZEND_END_ARG_INFO()
+/* }}} */
+
+/* {{{ study_extension_functions[]
+ */
+static const zend_function_entry study_extension_functions[] = {
+	PHP_FE(study_extension_dump,		arginfo_study_extension_dump)
 	PHP_FE_END
 };
 /* }}} */
 
-/* {{{ study_php_extension_module_entry
+/* {{{ study_extension_module_entry
  */
-zend_module_entry study_php_extension_module_entry = {
+zend_module_entry study_extension_module_entry = {
 	STANDARD_MODULE_HEADER,
-	"study_php_extension",					/* Extension name */
-	study_php_extension_functions,			/* zend_function_entry */
+	"study_extension",					/* Extension name */
+	study_extension_functions,			/* zend_function_entry */
 	NULL,							/* PHP_MINIT - Module initialization */
 	NULL,							/* PHP_MSHUTDOWN - Module shutdown */
-	PHP_RINIT(study_php_extension),			/* PHP_RINIT - Request initialization */
+	PHP_RINIT(study_extension),			/* PHP_RINIT - Request initialization */
 	NULL,							/* PHP_RSHUTDOWN - Request shutdown */
-	PHP_MINFO(study_php_extension),			/* PHP_MINFO - Module info */
-	PHP_STUDY_PHP_EXTENSION_VERSION,		/* Version */
+	PHP_MINFO(study_extension),			/* PHP_MINFO - Module info */
+	PHP_STUDY_EXTENSION_VERSION,		/* Version */
 	STANDARD_MODULE_PROPERTIES
 };
 /* }}} */
 
-#ifdef COMPILE_DL_STUDY_PHP_EXTENSION
+#ifdef COMPILE_DL_STUDY_EXTENSION
 # ifdef ZTS
 ZEND_TSRMLS_CACHE_DEFINE()
 # endif
-ZEND_GET_MODULE(study_php_extension)
+ZEND_GET_MODULE(study_extension)
 #endif

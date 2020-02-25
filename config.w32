@@ -1,7 +1,7 @@
-ARG_ENABLE('study_php_extension', 'study_php_extension support', 'no');
+ARG_ENABLE('study_extension', 'study_extension support', 'no');
 
-if (PHP_STUDY_PHP_EXTENSION != 'no') {
-	AC_DEFINE('HAVE_STUDY_PHP_EXTENSION', 1, 'study_php_extension support enabled');
+if (PHP_STUDY_EXTENSION != 'no') {
+	AC_DEFINE('HAVE_STUDY_EXTENSION', 1, 'study_extension support enabled');
 
-	EXTENSION('study_php_extension', 'study_php_extension.c', null, '/DZEND_ENABLE_STATIC_TSRMLS_CACHE=1');
+	EXTENSION('study_extension', 'study_extension.c', null, '/DZEND_ENABLE_STATIC_TSRMLS_CACHE=1');
 }

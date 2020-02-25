@@ -1,28 +1,28 @@
 --TEST--
-Check study_php_extension_dump function print value
+Check study_extension_dump function print value
 --SKIPIF--
 <?php
-if (!extension_loaded('study_php_extension')) {
+if (!extension_loaded('study_extension')) {
 	echo 'skip';
 }
 ?>
 --FILE--
 <?php
-study_php_extension_dump(null);
-study_php_extension_dump(true);
-study_php_extension_dump(false);
-study_php_extension_dump(1);
-study_php_extension_dump(-30);
-study_php_extension_dump(3.1415);
-study_php_extension_dump(2.0);
-study_php_extension_dump(-2.0);
-study_php_extension_dump("Hello World");
-study_php_extension_dump("");
-study_php_extension_dump(fopen("/dev/null", "r"));
-study_php_extension_dump(array());
-study_php_extension_dump(array(1, 2, 3, 4, 5));
-study_php_extension_dump(array(1, 2, array(3), array(4), 5));
-study_php_extension_dump(new stdClass());
+study_extension_dump(null);
+study_extension_dump(true);
+study_extension_dump(false);
+study_extension_dump(1);
+study_extension_dump(-30);
+study_extension_dump(3.1415);
+study_extension_dump(2.0);
+study_extension_dump(-2.0);
+study_extension_dump("Hello World");
+study_extension_dump("");
+study_extension_dump(fopen("/dev/null", "r"));
+study_extension_dump(array());
+study_extension_dump(array(1, 2, 3, 4, 5));
+study_extension_dump(array(1, 2, array(3), array(4), 5));
+study_extension_dump(new stdClass());
 ?>
 --EXPECT--
 NULL: null
