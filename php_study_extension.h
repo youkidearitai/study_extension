@@ -8,6 +8,8 @@ extern zend_module_entry study_extension_module_entry;
 
 # define PHP_STUDY_EXTENSION_VERSION "0.1.0"
 
+PHPAPI void study_extension_var_dump(zval *struc, int level);
+
 # if defined(ZTS) && defined(COMPILE_DL_STUDY_EXTENSION)
 ZEND_TSRMLS_CACHE_EXTERN()
 # endif
