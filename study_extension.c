@@ -7,6 +7,7 @@
 #include "php.h"
 #include "ext/standard/info.h"
 #include "php_study_extension.h"
+#include "zend_generators.h"
 
 /* For compatibility with older PHP versions */
 #ifndef ZEND_PARSE_PARAMETERS_NONE
@@ -182,6 +183,65 @@ PHP_FUNCTION(study_extension_dump)
 	}
 }
 
+static inline zend_bool study_skip_internal_handler(zend_execute_data *skip)
+{
+	return !(skip->func && ZEND_USER_CODE(skip->func->common.type))
+		&& skip->prev_execute_data;
+}
+
+/* {{{ void study_extension_print_backtrace( [ int options ] )
+ */
+PHP_FUNCTION(study_extension_print_backtrace)
+{
+	zend_execute_data *ptr, *skip, *call;
+	zend_long options = 0;
+	zend_long limit = 0;
+	zval arg_array;
+
+	int lineno;
+	int frameno = 0;
+
+	const char *filename;
+
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "|ll", &options, &limit) == FAILURE) {
+		return;
+	}
+
+	ZVAL_UNDEF(&arg_array);
+	ptr = EX(prev_execute_data);
+
+	call = ptr;
+	ptr = ptr->prev_execute_data;
+
+	while (ptr && (limit == 0 || frameno < limit)) {
+		frameno++;
+		ZVAL_UNDEF(&arg_array);
+		ptr = zend_generator_check_placeholder_frame(ptr);
+		skip = ptr;
+
+		if (study_skip_internal_handler(skip)) {
+			skip = skip->prev_execute_data;
+		}
+
+		if (skip->func && ZEND_USER_CODE(skip->func->common.type)) {
+			filename = ZSTR_VAL(skip->func->op_array.filename);
+			if (skip->opline->opcode == ZEND_HANDLE_EXCEPTION) {
+				if (EG(opline_before_exception)) {
+					lineno = EG(opline_before_exception)->lineno;
+				} else {
+					lineno = skip->func->op_array.line_end;
+				}
+			} else {
+				lineno = skip->opline->lineno;
+			}
+		} else {
+			filename = NULL;
+			lineno = 0;
+		}
+		break;
+	}
+}
+
 /* {{{ PHP_RINIT_FUNCTION
  */
 PHP_RINIT_FUNCTION(study_extension)
@@ -209,12 +269,20 @@ PHP_MINFO_FUNCTION(study_extension)
 ZEND_BEGIN_ARG_INFO(arginfo_study_extension_dump, 0)
 	ZEND_ARG_INFO(0, value)
 ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_study_extension_print_backtrace, 0, 0, 0)
+	ZEND_ARG_INFO(0, options)
+	ZEND_ARG_INFO(0, limit)
+ZEND_END_ARG_INFO()
+
 /* }}} */
+
 
 /* {{{ study_extension_functions[]
  */
 static const zend_function_entry study_extension_functions[] = {
 	PHP_FE(study_extension_dump,		arginfo_study_extension_dump)
+	PHP_FE(study_extension_print_backtrace,		arginfo_study_extension_print_backtrace)
 	PHP_FE_END
 };
 /* }}} */
