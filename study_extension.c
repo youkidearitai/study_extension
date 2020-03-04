@@ -194,6 +194,7 @@ static inline zend_bool study_skip_internal_handler(zend_execute_data *skip)
 PHP_FUNCTION(study_extension_print_backtrace)
 {
 	zend_execute_data *ptr, *skip, *call;
+	zend_function *func;
 	zend_long options = 0;
 	zend_long limit = 0;
 	zval arg_array;
@@ -202,6 +203,7 @@ PHP_FUNCTION(study_extension_print_backtrace)
 	int frameno = 0;
 
 	const char *filename;
+	const char *function_name;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "|ll", &options, &limit) == FAILURE) {
 		return;
@@ -239,9 +241,29 @@ PHP_FUNCTION(study_extension_print_backtrace)
 			lineno = 0;
 		}
 
-		php_printf("filename: %s:%d\n", filename, lineno);
+		if (call->func) {
+			zend_string *zend_function_name;
+			func = call->func;
+
+			zend_function_name = func->common.function_name;
+
+			if (zend_function_name != NULL) {
+				function_name = ZSTR_VAL(zend_function_name);
+			} else {
+				function_name = NULL;
+			}
+		} else {
+			func = NULL;
+			function_name = NULL;
+		}
+
+		if (function_name) {
+			php_printf("function: %s\tfilename: %s:%d\n", function_name, filename, lineno);
+		}
+		call = skip;
 		ptr = skip->prev_execute_data;
 	}
+
 }
 
 /* {{{ PHP_RINIT_FUNCTION
