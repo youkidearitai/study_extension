@@ -238,7 +238,9 @@ PHP_FUNCTION(study_extension_print_backtrace)
 			filename = NULL;
 			lineno = 0;
 		}
-		break;
+
+		php_printf("filename: %s:%d\n", filename, lineno);
+		ptr = skip->prev_execute_data;
 	}
 }
 
