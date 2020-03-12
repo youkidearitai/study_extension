@@ -1,4 +1,6 @@
-/* study_extension extension for PHP */
+/*
+ * study_extension extension for PHP
+ */
 
 #ifdef HAVE_CONFIG_H
 # include "config.h"
@@ -333,3 +335,7 @@ ZEND_TSRMLS_CACHE_DEFINE()
 # endif
 ZEND_GET_MODULE(study_extension)
 #endif
+
+/*
+ * vim: noexpandtab tabstop=4 shiftwidth=4
+ */
