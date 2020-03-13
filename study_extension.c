@@ -188,7 +188,14 @@ PHP_FUNCTION(study_extension_dump)
 static inline zend_bool study_skip_internal_handler(zend_execute_data *skip)
 {
 	return !(skip->func && ZEND_USER_CODE(skip->func->common.type))
-		&& skip->prev_execute_data;
+		&& skip->prev_execute_data
+		&& skip->prev_execute_data->func
+		&& ZEND_USER_CODE(skip->prev_execute_data->func->common.type)
+		&& skip->prev_execute_data->opline->opcode != ZEND_DO_FCALL
+		&& skip->prev_execute_data->opline->opcode != ZEND_DO_ICALL
+		&& skip->prev_execute_data->opline->opcode != ZEND_DO_UCALL
+		&& skip->prev_execute_data->opline->opcode != ZEND_DO_FCALL_BY_NAME
+		&& skip->prev_execute_data->opline->opcode != ZEND_INCLUDE_OR_EVAL;
 }
 
 /* {{{ void study_extension_print_backtrace( [ int options ] )
