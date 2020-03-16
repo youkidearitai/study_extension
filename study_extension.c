@@ -208,11 +208,15 @@ PHP_FUNCTION(study_extension_print_backtrace)
 	zend_long limit = 0;
 	zval arg_array;
 
+	zend_object *object;
+
 	int lineno;
 	int frameno = 0;
 
+	char *call_type;
 	const char *filename;
 	const char *function_name;
+	zend_string *class_name = NULL;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "|ll", &options, &limit) == FAILURE) {
 		return;
@@ -226,6 +230,9 @@ PHP_FUNCTION(study_extension_print_backtrace)
 
 	while (ptr && (limit == 0 || frameno < limit)) {
 		frameno++;
+		class_name = NULL;
+		call_type = NULL;
+
 		ZVAL_UNDEF(&arg_array);
 		ptr = zend_generator_check_placeholder_frame(ptr);
 		skip = ptr;
@@ -250,11 +257,17 @@ PHP_FUNCTION(study_extension_print_backtrace)
 			lineno = 0;
 		}
 
+		object = (Z_TYPE(call->This) == IS_OBJECT) ? Z_OBJ(call->This) : NULL;
+
 		if (call->func) {
 			zend_string *zend_function_name;
 			func = call->func;
 
-			zend_function_name = func->common.function_name;
+			if (func->common.scope && func->common.scope->trait_aliases) {
+				zend_function_name = zend_resolve_method_name(object ? object->ce : func->common.scope, func);
+			} else {
+				zend_function_name = func->common.function_name;
+			}
 
 			if (zend_function_name != NULL) {
 				function_name = ZSTR_VAL(zend_function_name);
@@ -267,8 +280,28 @@ PHP_FUNCTION(study_extension_print_backtrace)
 		}
 
 		if (function_name) {
-			php_printf("function: %s\tfilename: %s:%d\n", function_name, filename, lineno);
+			if (object) {
+				if (func->common.scope) {
+					class_name = func->common.scope->name;
+				} else if (object->handlers->get_class_name == zend_std_get_class_name) {
+					class_name = object->ce->name;
+				} else {
+					class_name = object->handlers->get_class_name(object);
+				}
+
+				call_type = "->";
+				php_printf("function: %s%s%s\tfilename: %s:%d\n", ZSTR_VAL(class_name), call_type, function_name, filename, lineno);
+			} else if (func->common.scope) {
+				class_name = func->common.scope->name;
+				call_type = "::";
+				php_printf("function: %s%s%s\tfilename: %s:%d\n", ZSTR_VAL(class_name), call_type, function_name, filename, lineno);
+			} else {
+				class_name = NULL;
+				call_type = NULL;
+				php_printf("function: %s\tfilename: %s:%d\n", function_name, filename, lineno);
+			}
 		}
+
 		call = skip;
 		ptr = skip->prev_execute_data;
 	}
