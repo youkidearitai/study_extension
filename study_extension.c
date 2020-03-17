@@ -45,7 +45,7 @@ again:
 			php_printf("BOOL: false\n");
 			break;
 		case IS_LONG:
-			php_printf("LONG: %lld\n", Z_LVAL_P(struc));
+			php_printf("LONG: " ZEND_LONG_FMT "\n", Z_LVAL_P(struc));
 			break;
 		case IS_DOUBLE:
 			php_gcvt(Z_DVAL_P(struc), 17, '.', 'E', tmp_str);
