@@ -300,6 +300,21 @@ PHP_FUNCTION(study_extension_print_backtrace)
 				call_type = NULL;
 				php_printf("function: %s\tfilename: %s:%d\n", function_name, filename, lineno);
 			}
+		} else {
+			if (!ptr->func || !ZEND_USER_CODE(ptr->func->common.type) || ptr->opline->opcode != ZEND_INCLUDE_OR_EVAL) {
+				function_name = "unknown";
+			} else {
+				switch (ptr->opline->extended_value) {
+					case ZEND_EVAL:
+						function_name = "eval";
+						break;
+					default:
+						function_name = "unknown";
+						break;
+				}
+			}
+			call_type = NULL;
+			php_printf("function: %s()\t%d\n", function_name, lineno);
 		}
 
 		call = skip;

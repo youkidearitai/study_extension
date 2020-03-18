@@ -33,6 +33,8 @@ y::bb();
 
 x();
 
+eval("y::bb();");
+
 ?>
 --EXPECTF--
 function: sab	filename: %s:%d
@@ -45,3 +47,9 @@ function: y::b	filename: %s:%d
 function: y::bb	filename: %s:%d
 
 function: x	filename: %s:%d
+
+function: sab	filename: %s:%d
+function: y::b	filename: %s:%d
+function: y::bb	filename: %s:%d
+function: eval()	%d
+
