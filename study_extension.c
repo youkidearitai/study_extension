@@ -308,12 +308,19 @@ PHP_FUNCTION(study_extension_print_backtrace)
 					case ZEND_EVAL:
 						function_name = "eval";
 						break;
+					case ZEND_INCLUDE:
+						function_name = "include";
+						break;
+					case ZEND_REQUIRE:
+						function_name = "require";
+						break;
 					default:
 						function_name = "unknown";
 						break;
 				}
 			}
 			call_type = NULL;
+			// TODO: print if function name is include filename
 			php_printf("function: %s()\t%d\n", function_name, lineno);
 		}
 
