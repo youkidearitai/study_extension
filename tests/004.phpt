@@ -54,10 +54,10 @@ function: x	filename: %s:%d
 function: sab	filename: %s:%d
 function: y::b	filename: %s:%d
 function: y::bb	filename: %s:%d
-function: eval()	%d
+function: eval	filename: %s:%d
 
 function: include_x_study_extension	filename: %s:%d
-function: include()	%d
+function: include	filename: %s:%d
 
 function: require_x_study_extension	filename: %s:%d
-function: require()	%d
+function: require	filename: %s:%d

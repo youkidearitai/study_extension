@@ -290,15 +290,12 @@ PHP_FUNCTION(study_extension_print_backtrace)
 				}
 
 				call_type = "->";
-				php_printf("function: %s%s%s\tfilename: %s:%d\n", ZSTR_VAL(class_name), call_type, function_name, filename, lineno);
 			} else if (func->common.scope) {
 				class_name = func->common.scope->name;
 				call_type = "::";
-				php_printf("function: %s%s%s\tfilename: %s:%d\n", ZSTR_VAL(class_name), call_type, function_name, filename, lineno);
 			} else {
 				class_name = NULL;
 				call_type = NULL;
-				php_printf("function: %s\tfilename: %s:%d\n", function_name, filename, lineno);
 			}
 		} else {
 			if (!ptr->func || !ZEND_USER_CODE(ptr->func->common.type) || ptr->opline->opcode != ZEND_INCLUDE_OR_EVAL) {
@@ -320,8 +317,18 @@ PHP_FUNCTION(study_extension_print_backtrace)
 				}
 			}
 			call_type = NULL;
-			// TODO: print if function name is include filename
-			php_printf("function: %s()\t%d\n", function_name, lineno);
+		}
+
+		php_printf("function: ");
+		if (class_name) {
+			PUTS(ZSTR_VAL(class_name));
+			PUTS(call_type);
+		}
+		php_printf("%s\t", function_name);
+		if (filename) {
+			php_printf("filename: %s:%d\n", filename, lineno);
+		} else {
+			php_printf("%d\n", lineno);
 		}
 
 		call = skip;
