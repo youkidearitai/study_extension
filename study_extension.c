@@ -328,7 +328,8 @@ PHP_FUNCTION(study_extension_print_backtrace)
 		if (filename) {
 			php_printf("filename: %s:%d\n", filename, lineno);
 		} else {
-			php_printf("%d\n", lineno);
+			// ex: array_walk, preg_replace etc
+			PUTS("\n");
 		}
 
 		call = skip;
