@@ -176,7 +176,7 @@ PHP_FUNCTION(study_extension_dump)
 	zval *zv_ptr;
 	int argc, i;
 
-	ZEND_PARSE_PARAMETERS_START(1, 1)
+	ZEND_PARSE_PARAMETERS_START(1, -1)
 		Z_PARAM_VARIADIC('+', zv_ptr, argc)
 	ZEND_PARSE_PARAMETERS_END();
 
