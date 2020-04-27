@@ -142,7 +142,7 @@ again:
 								PHPWRITE(ZSTR_VAL(key), ZSTR_LEN(key));
 								php_printf("\"");
 							}
-							ZEND_PUTS("]=>\n");
+							PUTS("]=>\n");
 						}
 
 						study_extension_var_dump(val, level + 2);
