@@ -363,7 +363,7 @@ PHP_MINFO_FUNCTION(study_extension)
 /* {{{ arginfo
  */
 ZEND_BEGIN_ARG_INFO(arginfo_study_extension_dump, 0)
-	ZEND_ARG_INFO(0, value)
+	ZEND_ARG_VARIADIC_INFO(0, vars)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_study_extension_print_backtrace, 0, 0, 0)
