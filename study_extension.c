@@ -48,12 +48,7 @@ again:
 			php_printf("LONG: " ZEND_LONG_FMT "\n", Z_LVAL_P(struc));
 			break;
 		case IS_DOUBLE:
-			php_gcvt(Z_DVAL_P(struc), 17, '.', 'E', tmp_str);
-			php_printf("DOUBLE: %s", tmp_str);
-			if (zend_finite(Z_DVAL_P(struc)) && strchr(tmp_str, '.') == NULL) {
-				PHPWRITE(".0", 2);
-			}
-			PHPWRITE("\n", 1);
+			php_printf("DOUBLE: %.*G\n", (int) EG(precision), Z_DVAL_P(struc));
 			break;
 		case IS_STRING:
 			php_printf("STRING: value=\"");

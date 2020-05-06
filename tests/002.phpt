@@ -30,9 +30,9 @@ BOOL: true
 BOOL: false
 LONG: 1
 LONG: -30
-DOUBLE: 3.1415000000000002
-DOUBLE: 2.0
-DOUBLE: -2.0
+DOUBLE: 3.1415
+DOUBLE: 2
+DOUBLE: -2
 STRING: value="Hello World", length=11
 STRING: value="", length=0
 RESOURCE: id=5 type=stream
