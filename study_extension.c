@@ -53,7 +53,7 @@ again:
 		case IS_STRING:
 			php_printf("STRING: value=\"");
 			PHPWRITE(Z_STRVAL_P(struc), Z_STRLEN_P(struc));
-			php_printf("\", length=%ld\n", Z_STRLEN_P(struc));
+			php_printf("\", length=%zd\n", Z_STRLEN_P(struc));
 			break;
 		case IS_RESOURCE: {
 			const char *type_name = zend_rsrc_list_get_rsrc_type(Z_RES_P(struc));
