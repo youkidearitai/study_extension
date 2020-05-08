@@ -20,7 +20,6 @@
 
 PHPAPI void study_extension_var_dump(zval *struc, int level) /* {{{ */
 {
-	char tmp_str[PHP_DOUBLE_MAX_LENGTH];
 	uint32_t count;
 	HashTable *myht;
 	zend_ulong num;
