@@ -20,7 +20,7 @@ study_extension_dump($s);
 --EXPECT--
 ARRAY(1) {
   [0]=>
-  ARRAY(1) {
+  &ARRAY(1) {
     [0]=>
     *RECURSION*
   }

@@ -18,6 +18,8 @@
 	ZEND_PARSE_PARAMETERS_END()
 #endif
 
+#define STUDY_COMMON (is_ref ? "&" : "")
+
 PHPAPI void study_extension_var_dump(zval *struc, int level) /* {{{ */
 {
 	uint32_t count;
@@ -26,6 +28,7 @@ PHPAPI void study_extension_var_dump(zval *struc, int level) /* {{{ */
 	zend_string *key;
 	zval *val;
 	zend_string *class_name;
+	int is_ref = 0;
 
 	if (level > 1) {
 		php_printf("%*c", level - 1, ' ');
@@ -35,28 +38,28 @@ again:
 	switch(Z_TYPE_P(struc))
 	{
 		case IS_NULL:
-			php_printf("NULL: null\n");
+			php_printf("%sNULL: null\n", STUDY_COMMON);
 			break;
 		case IS_TRUE:
-			php_printf("BOOL: true\n");
+			php_printf("%sBOOL: true\n", STUDY_COMMON);
 			break;
 		case IS_FALSE:
-			php_printf("BOOL: false\n");
+			php_printf("%sBOOL: false\n", STUDY_COMMON);
 			break;
 		case IS_LONG:
-			php_printf("LONG: " ZEND_LONG_FMT "\n", Z_LVAL_P(struc));
+			php_printf("%sLONG: " ZEND_LONG_FMT "\n", STUDY_COMMON, Z_LVAL_P(struc));
 			break;
 		case IS_DOUBLE:
-			php_printf("DOUBLE: %.*G\n", (int) EG(precision), Z_DVAL_P(struc));
+			php_printf("%sDOUBLE: %.*G\n", STUDY_COMMON, (int) EG(precision), Z_DVAL_P(struc));
 			break;
 		case IS_STRING:
-			php_printf("STRING: value=\"");
+			php_printf("%sSTRING: value=\"", STUDY_COMMON);
 			PHPWRITE(Z_STRVAL_P(struc), Z_STRLEN_P(struc));
 			php_printf("\", length=%zd\n", Z_STRLEN_P(struc));
 			break;
 		case IS_RESOURCE: {
 			const char *type_name = zend_rsrc_list_get_rsrc_type(Z_RES_P(struc));
-			php_printf("RESOURCE: id=%d type=%s\n", Z_RES_P(struc)->handle, type_name ? type_name : "Unknown");
+			php_printf("%sRESOURCE: id=%d type=%s\n", STUDY_COMMON, Z_RES_P(struc)->handle, type_name ? type_name : "Unknown");
 			break;
 		}
 		case IS_ARRAY:
@@ -70,7 +73,7 @@ again:
 				GC_PROTECT_RECURSION(myht);
 			}
 			count = zend_array_count(myht);
-			php_printf("ARRAY(%d) {\n", count);
+			php_printf("%sARRAY(%d) {\n", STUDY_COMMON, count);
 
 			ZEND_HASH_FOREACH_KEY_VAL_IND(myht, num, key, val) {
 				if (key == NULL) { /* numeric key */
@@ -103,7 +106,7 @@ again:
 			myht = zend_get_properties_for(struc, ZEND_PROP_PURPOSE_DEBUG);
 			class_name = Z_OBJ_HANDLER_P(struc, get_class_name)(Z_OBJ_P(struc));
 
-			php_printf("OBJECT(%s)#%d (%d) {\n", ZSTR_VAL(class_name), Z_OBJ_HANDLE_P(struc), myht ? zend_array_count(myht) : 0);
+			php_printf("%sOBJECT(%s)#%d (%d) {\n", STUDY_COMMON, ZSTR_VAL(class_name), Z_OBJ_HANDLE_P(struc), myht ? zend_array_count(myht) : 0);
 
 			if (myht) {
 				ZEND_HASH_FOREACH_KEY_VAL_IND(myht, num, key, val) {
@@ -153,6 +156,7 @@ again:
 			Z_UNPROTECT_RECURSION_P(struc); /* unprotect recursion */
 			break;
 		case IS_REFERENCE:
+			is_ref = 1;
 			struc = Z_REFVAL_P(struc);
 			goto again;
 			break;
