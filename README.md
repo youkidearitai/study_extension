@@ -20,3 +20,10 @@ php-srcディレクトリにあるものとする。
 
 `var_dump`の写経、簡略とアレンジを含む。
 
+### `study_extension_print_backtrace([ int $options, int $limit ])`
+
+`debug_print_backtrace`の写経。
+
+### `study_extension_nop()
+
+何もしない。
