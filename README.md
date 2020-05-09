@@ -24,6 +24,6 @@ php-srcディレクトリにあるものとする。
 
 `debug_print_backtrace`の写経。
 
-### `study_extension_nop()
+### `study_extension_nop()`
 
 何もしない。
