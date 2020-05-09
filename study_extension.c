@@ -336,6 +336,10 @@ PHP_FUNCTION(study_extension_print_backtrace)
 
 }
 
+PHP_FUNCTION(study_extension_nop)
+{
+}
+
 /* {{{ PHP_RINIT_FUNCTION
  */
 PHP_RINIT_FUNCTION(study_extension)
@@ -369,6 +373,9 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_study_extension_print_backtrace, 0, 0, 0)
 	ZEND_ARG_INFO(0, limit)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO(arginfo_study_extension_nop, 0)
+ZEND_END_ARG_INFO()
+
 /* }}} */
 
 
@@ -377,6 +384,7 @@ ZEND_END_ARG_INFO()
 static const zend_function_entry study_extension_functions[] = {
 	PHP_FE(study_extension_dump,		arginfo_study_extension_dump)
 	PHP_FE(study_extension_print_backtrace,		arginfo_study_extension_print_backtrace)
+	PHP_FE(study_extension_nop,		arginfo_study_extension_nop)
 	PHP_FE_END
 };
 /* }}} */
