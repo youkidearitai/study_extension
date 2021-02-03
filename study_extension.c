@@ -64,6 +64,7 @@ again:
 		}
 		case IS_ARRAY:
 			myht = Z_ARRVAL_P(struc);
+
 			/* recursion protection */
 			if (level > 1 && !(GC_FLAGS(myht) & GC_IMMUTABLE)) {
 				if (GC_IS_RECURSIVE(myht)) {
@@ -340,6 +341,28 @@ PHP_FUNCTION(study_extension_nop)
 {
 }
 
+static zend_always_inline int php_info_print(const char *str)
+{
+	return php_output_write(str, strlen(str));
+}
+
+PHP_FUNCTION(study_extension_phpinfo)
+{
+	zend_long flag = PHP_INFO_ALL;
+
+	ZEND_PARSE_PARAMETERS_START(0, 1)
+		Z_PARAM_OPTIONAL
+		Z_PARAM_LONG(flag)
+	ZEND_PARSE_PARAMETERS_END();
+
+	/* 2260e1742d671a2b57b0d086faf87393a0460bef */
+	/* Andale! Andale! Yee-Hah! (早く！早く！やっほー）*/
+	php_output_start_default();
+	php_info_print("phpinfo()\n");
+	php_output_end();
+	RETURN_TRUE;
+}
+
 /* {{{ PHP_RINIT_FUNCTION
  */
 PHP_RINIT_FUNCTION(study_extension)
@@ -373,6 +396,10 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_study_extension_print_backtrace, 0, 0, 0)
 	ZEND_ARG_INFO(0, limit)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_study_extension_phpinfo, 0, 0, 0)
+	ZEND_ARG_VARIADIC_INFO(0, vars)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO(arginfo_study_extension_nop, 0)
 ZEND_END_ARG_INFO()
 
@@ -384,6 +411,7 @@ ZEND_END_ARG_INFO()
 static const zend_function_entry study_extension_functions[] = {
 	PHP_FE(study_extension_dump,		arginfo_study_extension_dump)
 	PHP_FE(study_extension_print_backtrace,		arginfo_study_extension_print_backtrace)
+	PHP_FE(study_extension_phpinfo,		arginfo_study_extension_phpinfo)
 	PHP_FE(study_extension_nop,		arginfo_study_extension_nop)
 	PHP_FE_END
 };
