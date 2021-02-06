@@ -7,9 +7,12 @@
 #endif
 
 #include "php.h"
+#include "php_ini.h"
+#include "SAPI.h"
 #include "ext/standard/info.h"
 #include "php_study_extension.h"
 #include "zend_generators.h"
+#include "zend_extensions.h"
 
 /* For compatibility with older PHP versions */
 #ifndef ZEND_PARSE_PARAMETERS_NONE
@@ -341,9 +344,101 @@ PHP_FUNCTION(study_extension_nop)
 {
 }
 
+PHPAPI extern char *php_ini_opened_path;
+PHPAPI extern char *php_ini_scanned_path;
+
 static zend_always_inline int php_info_print(const char *str)
 {
 	return php_output_write(str, strlen(str));
+}
+
+PHPAPI ZEND_COLD void study_php_print_info(int flag)
+{
+	zend_string *php_uname;
+
+	if (sapi_module.phpinfo_as_text) {
+		php_info_print("text mode study_extension_phpinfo()\n");
+	} else {
+		php_info_print("html\n");
+	}
+
+	if (flag & PHP_INFO_GENERAL) {
+		char *zend_version = get_zend_version();
+		char temp_api[10];
+
+		php_uname = php_get_uname('a');
+
+		// PHP バージョン
+		php_info_print_table_row(2, "PHP Version", PHP_VERSION);
+		// uname -aの結果(Linux)
+		// GetVersion関数などの結果(Windows)
+		php_info_print_table_row(2, "System", ZSTR_VAL(php_uname));
+		// コンパイルした日付
+		php_info_print_table_row(2, "Build Date", __DATE__ " " __TIME__);
+#ifdef COMPILER
+		// Windowsで表示される(Windowsでしか設定していない)
+		// Visual C++ 2017 など
+		php_info_print_table_row(2, "Compiler", COMPILER);
+#endif
+#ifdef ARCHITECTURE
+		// Windowsで表示される(Windowsでしか設定していない)
+		// 32bit: x86
+		// 64bit: x64
+		php_info_print_table_row(2, "Architecture", ARCHITECTURE);
+#endif
+#ifdef CONFIGURE_COMMAND
+		// configure時のコマンド
+		php_info_print_table_row(2, "Configure Command", CONFIGURE_COMMAND);
+#endif
+
+		// sapi_module.name php_sapi_name()の戻り値と同じ
+		if (sapi_module.name) {
+			php_info_print_table_row(2, "Server API (sapi_module.name)", sapi_module.name);
+		}
+
+		// sapi_module.pretty_nameはsapi_module.nameよりもわかりやすい名前で表示する
+		if (sapi_module.pretty_name) {
+			php_info_print_table_row(2, "Server API", sapi_module.pretty_name);
+		}
+
+		// virtual_getcwdを使ってpathを取得するときなどに使う。
+		// 何故ならばスレッドが実行するプログラムはそれ自身を起点としないと
+		// 例えばinclude "file.php";などを見つけることができないため。
+		// マルチスレッドを有効にするオプションである
+		// --enable-maintainer-ztsをconfigureに加えるとここもenabledとなる。
+#ifdef VIRTUAL_DIR
+		php_info_print_table_row(2, "Virtual Directory Support", "enabled");
+#else
+		php_info_print_table_row(2, "Virtual Directory Support", "disabled");
+#endif
+
+		// php.iniのファイルパス
+		// --with-config-file-path=PATH で変更できる
+		php_info_print_table_row(2, "Configuration File (php.ini) Path", PHP_CONFIG_FILE_PATH);
+		// 読み込んだphp.iniファイルのpath
+		php_info_print_table_row(2, "Loaded Configuration File", php_ini_opened_path ? php_ini_opened_path : "(none)");
+
+		// php.iniを追加で読み込める。これは環境変数 PHP_INI_SCAN_DIR を使う。
+		php_info_print_table_row(2, "Scan this dir for additional .ini files", php_ini_scanned_path ? php_ini_scanned_path : "(none)");
+
+		snprintf(temp_api, sizeof(temp_api), "%d", PHP_API_VERSION);
+		// PHP APIのバージョン
+		// phpizeで使う
+		php_info_print_table_row(2, "PHP API", temp_api);
+
+		// Zend ExtensionのZEND_MODULE_API_NO
+		snprintf(temp_api, sizeof(temp_api), "%d", ZEND_MODULE_API_NO);
+		php_info_print_table_row(2, "PHP Extension", temp_api);
+
+		// Zend ExtensionのZEND_EXTENSION_API_NO
+		snprintf(temp_api, sizeof(temp_api), "%d", ZEND_EXTENSION_API_NO);
+		php_info_print_table_row(2, "Zend Extension", temp_api);
+
+		php_info_print_table_row(2, "Zend Extension Build", ZEND_MODULE_BUILD_ID);
+		php_info_print_table_row(2, "PHP Extension Build", ZEND_MODULE_BUILD_ID);
+
+		zend_string_free(php_uname);
+	}
 }
 
 PHP_FUNCTION(study_extension_phpinfo)
@@ -358,7 +453,7 @@ PHP_FUNCTION(study_extension_phpinfo)
 	/* 2260e1742d671a2b57b0d086faf87393a0460bef */
 	/* Andale! Andale! Yee-Hah! (早く！早く！やっほー）*/
 	php_output_start_default();
-	php_info_print("phpinfo()\n");
+	study_php_print_info(flag);
 	php_output_end();
 	RETURN_TRUE;
 }
