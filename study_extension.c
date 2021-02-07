@@ -510,6 +510,7 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 			efree(descr);
 		}
 
+		// IPv6をサポートしているか
 #if HAVE_IPV6
 		php_info_print_table_row(2, "IPv6 Support", "enabled");
 #else
@@ -524,12 +525,16 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 		php_info_print_table_row(2, "DTrace Support", "disabled");
 #endif
 
+		// サポートされているPHPのストリーム
 		php_info_print_stream_hash("PHP Streams", php_stream_get_url_stream_wrappers_hash());
+		// ストリームソケット
 		php_info_print_stream_hash("Stream Socket Transports", php_stream_xport_get_hash());
+		// ストリームフィルター
 		php_info_print_stream_hash("Stream Filters", php_get_stream_filters_hash());
 
 		php_info_print_table_end();
 
+		// Engineの表示
 		php_info_print_box_start(0);
 		php_info_print("Engine:");
 		php_info_print("\n");
