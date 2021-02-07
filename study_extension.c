@@ -352,6 +352,36 @@ static zend_always_inline int php_info_print(const char *str)
 	return php_output_write(str, strlen(str));
 }
 
+static ZEND_COLD void php_info_print_stream_hash(const char *name, HashTable *ht)
+{
+	zend_string *key;
+
+	if (ht) {
+		if (zend_hash_num_elements(ht)) {
+			int first = 1;
+
+			php_printf("\nRegisterd %s => ", name);
+
+			ZEND_HASH_FOREACH_STR_KEY(ht, key) {
+				if (key) {
+					if (first) {
+						first = 0;
+					} else {
+						php_printf(", ");
+					}
+					php_info_print(ZSTR_VAL(key));
+				}
+			} ZEND_HASH_FOREACH_END();
+		} else {
+			char reg_name[128];
+			snprintf(reg_name, sizeof(reg_name), "Registered %s", name);
+			php_info_print_table_row(2, reg_name, "none registered");
+		}
+	} else {
+		php_info_print_table_row(2, name, "disabled");
+	}
+}
+
 PHPAPI ZEND_COLD void study_php_print_info(int flag)
 {
 	zend_string *php_uname;
@@ -436,6 +466,75 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 
 		php_info_print_table_row(2, "Zend Extension Build", ZEND_MODULE_BUILD_ID);
 		php_info_print_table_row(2, "PHP Extension Build", ZEND_MODULE_BUILD_ID);
+
+		// Debug buildの有無
+		// --enable-debug加えるとyesになる
+#ifdef ZEND_DEBUG
+		php_info_print_table_row(2, "Debug Build", "yes" );
+#else
+		php_info_print_table_row(2, "Debug Build", "no" );
+#endif
+
+		// スレッドセーフが有効かどうか
+		// --enable-maintainer-zts (<=PHP7)
+		// --enable-zts (PHP8)
+		// もし有効ならば使用しているthreadのライブラリの名前
+#ifdef ZTS
+		php_info_print_table_row(2, "Thread Safety", "enabled");
+		php_info_print_table_row(2, "Thread API", tsrm_api_name());
+#else
+		php_info_print_table_row(2, "Thread Safety", "disabled");
+#endif
+
+		// シグナルハンドラが有効かどうか
+#ifdef ZEND_SIGNALS
+		php_info_print_table_row(2, "Zend Signal Handling", "enabled");
+#else
+		php_info_print_table_row(2, "Zend Signal Handling", "disabled");
+#endif
+
+		// Zend Memory Manager(ZMM とか ZendMMとか呼ばれる)が有効かどうか
+		php_info_print_table_row(2, "Zend Memory Manager", is_zend_mm() ? "enabled" : "disabled");
+
+		// Zend Multibyte Support
+		// mbstringのモジュールが出てくる
+		{
+			const zend_multibyte_functions *functions = zend_multibyte_get_functions();
+			char *descr;
+			if (functions) {
+				spprintf(&descr, 0, "provided by %s", functions->provider_name);
+			} else {
+				descr = estrdup("disabled");
+			}
+			php_info_print_table_row(2, "Zend Multibyte Support", descr);
+			efree(descr);
+		}
+
+#if HAVE_IPV6
+		php_info_print_table_row(2, "IPv6 Support", "enabled");
+#else
+		php_info_print_table_row(2, "IPv6 Support", "disabled");
+#endif
+
+		// DTrace(ダイナミックトレース)が有効かどうか。
+		// 動的にプログラムの実行を追跡したりする
+#if HAVE_DTRACE
+		php_info_print_table_row(2, "DTrace Support", (zend_dtrace_enabled ? "enabled" : "available, disabled"));
+#else
+		php_info_print_table_row(2, "DTrace Support", "disabled");
+#endif
+
+		php_info_print_stream_hash("PHP Streams", php_stream_get_url_stream_wrappers_hash());
+		php_info_print_stream_hash("Stream Socket Transports", php_stream_xport_get_hash());
+		php_info_print_stream_hash("Stream Filters", php_get_stream_filters_hash());
+
+		php_info_print_table_end();
+
+		php_info_print_box_start(0);
+		php_info_print("Engine:");
+		php_info_print("\n");
+		php_info_print(zend_version);
+		php_info_print_box_end();
 
 		zend_string_free(php_uname);
 	}
