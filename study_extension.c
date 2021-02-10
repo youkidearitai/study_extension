@@ -382,6 +382,15 @@ static ZEND_COLD void php_info_print_stream_hash(const char *name, HashTable *ht
 	}
 }
 
+static int module_name_cmp(const void *a, const void *b)
+{
+	Bucket *f = (Bucket *) a;
+	Bucket *s = (Bucket *) b;
+
+	return strcasecmp(((zend_module_entry *)Z_PTR(f->val))->name,
+			((zend_module_entry *)Z_PTR(s->val))->name);
+}
+
 PHPAPI ZEND_COLD void study_php_print_info(int flag)
 {
 	zend_string *php_uname;
@@ -543,6 +552,34 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 
 		zend_string_free(php_uname);
 	}
+
+	// Configurationセクション
+	//zend_ini_sort_entries();
+	if (flag & PHP_INFO_CONFIGURATION) {
+		php_printf("\n");
+		php_info_print_table_header(1, "Configuration");
+		if (!(flag & PHP_INFO_MODULES)) {
+			php_printf("\n");
+			php_info_print_table_header(1, "PHP Core");
+			display_ini_entries(NULL);
+		}
+	}
+
+	if (flag & PHP_INFO_MODULES) {
+		HashTable sorted_registry;
+		zend_module_entry *module;
+
+		zend_hash_init(&sorted_registry, zend_hash_num_elements(&module_registry), NULL, NULL, 1);
+		zend_hash_copy(&sorted_registry, &module_registry, NULL);
+		zend_hash_sort(&sorted_registry, module_name_cmp, 0);
+
+		ZEND_HASH_FOREACH_PTR(&sorted_registry, module) {
+			if (module->info_func || module->version) {
+				php_info_print_module(module);
+			}
+		} ZEND_HASH_FOREACH_END();
+	}
+
 }
 
 PHP_FUNCTION(study_extension_phpinfo)
