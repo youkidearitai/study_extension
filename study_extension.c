@@ -369,7 +369,7 @@ static ZEND_COLD void php_info_print_stream_hash(const char *name, HashTable *ht
 					} else {
 						php_printf(", ");
 					}
-					php_info_print(ZSTR_VAL(key));
+					php_printf("%s", ZSTR_VAL(key));
 				}
 			} ZEND_HASH_FOREACH_END();
 		} else {
@@ -396,9 +396,9 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 	zend_string *php_uname;
 
 	if (sapi_module.phpinfo_as_text) {
-		php_info_print("text mode study_extension_phpinfo()\n");
+		php_printf("text mode study_extension_phpinfo()\n");
 	} else {
-		php_info_print("html\n");
+		php_printf("html\n");
 	}
 
 	if (flag & PHP_INFO_GENERAL) {
@@ -545,9 +545,9 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 
 		// Engineの表示
 		php_info_print_box_start(0);
-		php_info_print("Engine:");
-		php_info_print("\n");
-		php_info_print(zend_version);
+		php_printf("Engine:");
+		php_printf("\n");
+		php_printf("%s", zend_version);
 		php_info_print_box_end();
 
 		zend_string_free(php_uname);
