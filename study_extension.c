@@ -347,11 +347,6 @@ PHP_FUNCTION(study_extension_nop)
 PHPAPI extern char *php_ini_opened_path;
 PHPAPI extern char *php_ini_scanned_path;
 
-static zend_always_inline int php_info_print(const char *str)
-{
-	return php_output_write(str, strlen(str));
-}
-
 static ZEND_COLD void php_info_print_stream_hash(const char *name, HashTable *ht)
 {
 	zend_string *key;
