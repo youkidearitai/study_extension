@@ -554,7 +554,7 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 	}
 
 	// Configurationセクション
-	//zend_ini_sort_entries();
+	zend_ini_sort_entries();
 	if (flag & PHP_INFO_CONFIGURATION) {
 		php_printf("\n");
 		php_info_print_table_header(1, "Configuration");
@@ -573,11 +573,28 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 		zend_hash_copy(&sorted_registry, &module_registry, NULL);
 		zend_hash_sort(&sorted_registry, module_name_cmp, 0);
 
-		ZEND_HASH_FOREACH_PTR(&sorted_registry, module) {
+		ZEND_HASH_FOREACH_PTR(&module_registry, module) {
 			if (module->info_func || module->version) {
 				php_info_print_module(module);
 			}
 		} ZEND_HASH_FOREACH_END();
+		ZEND_HASH_FOREACH_PTR(&module_registry, module) {
+			if (module->info_func || module->version) {
+				php_info_print_module(module);
+			}
+		} ZEND_HASH_FOREACH_END();
+
+		php_info_print_table_header(1, "Additional Modules");
+		php_info_print_table_start();
+		php_info_print_table_header(1, "Module Name");
+		ZEND_HASH_FOREACH_PTR(&sorted_registry, module) {
+			if (!module->info_func && !module->version) {
+				php_info_print_module(module);
+			}
+		} ZEND_HASH_FOREACH_END();
+		php_info_print_table_end();
+
+		zend_hash_destroy(&sorted_registry);
 	}
 
 }
@@ -615,8 +632,10 @@ PHP_RINIT_FUNCTION(study_extension)
  */
 PHP_MINFO_FUNCTION(study_extension)
 {
+	// phpinfo関数で表示される関数部分
 	php_info_print_table_start();
 	php_info_print_table_header(2, "study_extension support", "enabled");
+	php_info_print_table_row(2, "Version", PHP_STUDY_EXTENSION_VERSION);
 	php_info_print_table_end();
 }
 /* }}} */
@@ -663,7 +682,7 @@ zend_module_entry study_extension_module_entry = {
 	NULL,							/* PHP_MSHUTDOWN - Module shutdown */
 	PHP_RINIT(study_extension),			/* PHP_RINIT - Request initialization */
 	NULL,							/* PHP_RSHUTDOWN - Request shutdown */
-	PHP_MINFO(study_extension),			/* PHP_MINFO - Module info */
+	PHP_MINFO(study_extension),			/* PHP_MINFO - Module info ここをNULLにすると、phpinfoではPHP_STUDY_EXTENSION_VERSIONが表示される */
 	PHP_STUDY_EXTENSION_VERSION,		/* Version */
 	STANDARD_MODULE_PROPERTIES
 };
