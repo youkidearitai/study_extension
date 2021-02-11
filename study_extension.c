@@ -568,17 +568,13 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 		zend_hash_copy(&sorted_registry, &module_registry, NULL);
 		zend_hash_sort(&sorted_registry, module_name_cmp, 0);
 
-		ZEND_HASH_FOREACH_PTR(&module_registry, module) {
-			if (module->info_func || module->version) {
-				php_info_print_module(module);
-			}
-		} ZEND_HASH_FOREACH_END();
-		ZEND_HASH_FOREACH_PTR(&module_registry, module) {
+		ZEND_HASH_FOREACH_PTR(&sorted_registry, module) {
 			if (module->info_func || module->version) {
 				php_info_print_module(module);
 			}
 		} ZEND_HASH_FOREACH_END();
 
+		php_printf("\n");
 		php_info_print_table_header(1, "Additional Modules");
 		php_info_print_table_start();
 		php_info_print_table_header(1, "Module Name");
