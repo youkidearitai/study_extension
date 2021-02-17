@@ -389,6 +389,7 @@ static int module_name_cmp(const void *a, const void *b)
 PHPAPI ZEND_COLD void study_php_print_info(int flag)
 {
 	zend_string *php_uname;
+	char **env, *tmp1, *tmp2;
 
 	if (sapi_module.phpinfo_as_text) {
 		php_printf("text mode study_extension_phpinfo()\n");
@@ -560,6 +561,7 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 		}
 	}
 
+	// Modules
 	if (flag & PHP_INFO_MODULES) {
 		HashTable sorted_registry;
 		zend_module_entry *module;
@@ -586,6 +588,38 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 		php_info_print_table_end();
 
 		zend_hash_destroy(&sorted_registry);
+	}
+
+	// 環境変数
+	if (flag & PHP_INFO_ENVIRONMENT) {
+		php_printf("\n");
+		php_printf("Environment");
+
+		php_info_print_table_start();
+		php_info_print_table_header(2, "Variable", "Value");
+
+		// ミューテックスで排他ロックする
+		tsrm_env_lock();
+
+		// environはmain/php.hにある
+		for (env = environ; env != NULL && *env != NULL; env++) {
+			tmp1 = estrdup(*env);
+			if (!(tmp2 = strchr(tmp1, '='))) {
+				efree(tmp1);
+				continue;
+			}
+			*tmp2 = 0;
+			tmp2++;
+			php_info_print_table_row(2, tmp1, tmp2);
+			efree(tmp1);
+		}
+
+		tsrm_env_unlock();
+		php_info_print_table_end();
+	}
+
+	if (flag & PHP_INFO_VARIABLES) {
+
 	}
 
 }
