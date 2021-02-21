@@ -9,6 +9,7 @@
 #include "php.h"
 #include "php_ini.h"
 #include "SAPI.h"
+#include "ext/standard/credits.h"
 #include "ext/standard/info.h"
 #include "php_study_extension.h"
 #include "zend_generators.h"
@@ -680,6 +681,13 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 		study_php_print_gpcse_array(ZEND_STRL("_ENV"));
 		php_info_print_table_end();
 	}
+
+	// クレジット(本家phpinfo(INFO_CREDITS)、cliだと表示されないんだけどなんで？)
+	if ((flag & PHP_INFO_CREDITS)) {
+		php_info_print_hr();
+		php_print_credits(PHP_CREDITS_ALL & ~PHP_CREDITS_FULLPAGE);
+	}
+
 
 }
 
