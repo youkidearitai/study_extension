@@ -367,9 +367,8 @@ static ZEND_COLD void study_php_print_gpcse_array(char *name, uint32_t name_leng
 				php_printf(ZEND_ULONG_FMT, num_key);
 			}
 
-			php_printf("']");
+			php_printf("'] => ");
 
-			php_printf(" => ");
 			// 面倒くさかったから、var_dump写経のときのやつをdumpする
 			study_extension_var_dump(tmp, 1);
 		} ZEND_HASH_FOREACH_END();
@@ -682,12 +681,16 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 		php_info_print_table_end();
 	}
 
-	// クレジット(本家phpinfo(INFO_CREDITS)、cliだと表示されないんだけどなんで？)
+	/*
+	 * クレジット(本家phpinfo(INFO_CREDITS)
+	 * cliだと表示されないんだけどなんで？)
+	 *
+	 * https://bugs.php.net/bug.php?id=80771
+	 */
 	if ((flag & PHP_INFO_CREDITS)) {
 		php_info_print_hr();
 		php_print_credits(PHP_CREDITS_ALL & ~PHP_CREDITS_FULLPAGE);
 	}
-
 
 }
 
