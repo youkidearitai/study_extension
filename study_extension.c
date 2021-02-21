@@ -347,6 +347,36 @@ PHP_FUNCTION(study_extension_nop)
 PHPAPI extern char *php_ini_opened_path;
 PHPAPI extern char *php_ini_scanned_path;
 
+static ZEND_COLD void study_php_print_gpcse_array(char *name, uint32_t name_length)
+{
+	zval *data, *tmp;
+	zend_ulong num_key;
+	zend_string *key, *string_key;
+
+	key = zend_string_init(name, name_length, 0);
+	zend_is_auto_global(key);
+
+	if ((data = zend_hash_find(&EG(symbol_table), key)) != NULL && (Z_TYPE_P(data) == IS_ARRAY)) {
+		ZEND_HASH_FOREACH_KEY_VAL(Z_ARRVAL_P(data), num_key, string_key, tmp) {
+			php_printf("$%s['", name);
+
+			if (string_key != NULL) {
+				php_printf("%s", ZSTR_VAL(string_key));
+			} else {
+				php_printf(ZEND_ULONG_FMT, num_key);
+			}
+
+			php_printf("']");
+
+			php_printf(" => ");
+			// 面倒くさかったから、var_dump写経のときのやつをdumpする
+			study_extension_var_dump(tmp, 1);
+		} ZEND_HASH_FOREACH_END();
+	}
+
+	zend_string_efree(key);
+}
+
 static ZEND_COLD void php_info_print_stream_hash(const char *name, HashTable *ht)
 {
 	zend_string *key;
@@ -618,8 +648,37 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 		php_info_print_table_end();
 	}
 
+	// EGPCS
 	if (flag & PHP_INFO_VARIABLES) {
+		zval *data;
 
+		php_printf("\n");
+		php_printf("PHP Variables");
+
+		php_info_print_table_start();
+		php_info_print_table_header(2, "Variable", "Value");
+
+		if ((data = zend_hash_str_find(&EG(symbol_table), "PHP_SELF", sizeof("PHP_SELF")-1)) != NULL && Z_TYPE_P(data) == IS_STRING) {
+			php_info_print_table_row(2, "PHP_SELF", Z_STRVAL_P(data));
+		}
+		if ((data = zend_hash_str_find(&EG(symbol_table), "PHP_AUTH_TYPE", sizeof("PHP_AUTH_TYPE")-1)) != NULL && Z_TYPE_P(data) == IS_STRING) {
+			php_info_print_table_row(2, "PHP_AUTH_TYPE", Z_STRVAL_P(data));
+		}
+		if ((data = zend_hash_str_find(&EG(symbol_table), "PHP_AUTH_USER", sizeof("PHP_AUTH_USER")-1)) != NULL && Z_TYPE_P(data) == IS_STRING) {
+			php_info_print_table_row(2, "PHP_AUTH_USER", Z_STRVAL_P(data));
+		}
+		if ((data = zend_hash_str_find(&EG(symbol_table), "PHP_AUTH_PW", sizeof("PHP_AUTH_PW")-1)) != NULL && Z_TYPE_P(data) == IS_STRING) {
+			php_info_print_table_row(2, "PHP_AUTH_PW", Z_STRVAL_P(data));
+		}
+
+		study_php_print_gpcse_array(ZEND_STRL("_REQUEST"));
+		study_php_print_gpcse_array(ZEND_STRL("_GET"));
+		study_php_print_gpcse_array(ZEND_STRL("_POST"));
+		study_php_print_gpcse_array(ZEND_STRL("_FILES"));
+		study_php_print_gpcse_array(ZEND_STRL("_COOKIE"));
+		study_php_print_gpcse_array(ZEND_STRL("_SERVER"));
+		study_php_print_gpcse_array(ZEND_STRL("_ENV"));
+		php_info_print_table_end();
 	}
 
 }
