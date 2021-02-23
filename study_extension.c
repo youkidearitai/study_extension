@@ -332,7 +332,30 @@ PHP_FUNCTION(study_extension_print_backtrace)
 			php_printf("filename: %s:%d\n", filename, lineno);
 		} else {
 			// ex: array_walk, preg_replace etc
-			PUTS("\n");
+
+			/*
+			 * ee97ffd887441557db8aa3cb8d78c02c07274755
+			 */
+			zend_execute_data *prev_call = skip;
+			zend_execute_data *prev = skip->prev_execute_data;
+
+			while (prev) {
+				if (prev_call &&
+					prev_call->func &&
+					!ZEND_USER_CODE(prev_call->func->common.type)) {
+					prev = NULL;
+					break;
+				}
+				if (prev->func && ZEND_USER_CODE(prev->func->common.type)) {
+					php_printf(" called: %s:%d\n", ZSTR_VAL(prev->func->op_array.filename), prev->opline->lineno);
+					break;
+				}
+				prev_call = prev;
+				prev = prev->prev_execute_data;
+			}
+			if (!prev) {
+				PUTS("\n");
+			}
 		}
 
 		call = skip;
