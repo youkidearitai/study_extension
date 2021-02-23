@@ -692,6 +692,20 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 		php_print_credits(PHP_CREDITS_ALL & ~PHP_CREDITS_FULLPAGE);
 	}
 
+	// ライセンス
+	if (flag & PHP_INFO_LICENSE) {
+		php_printf("\nPHP License\n");
+		php_printf("This program is free software; you can redistribute it and/or modify\n");
+		php_printf("it under the terms of the PHP License as published by the PHP Group\n");
+		php_printf("and included in the distribution in the file:  LICENSE\n");
+		php_printf("\n");
+		php_printf("This program is distributed in the hope that it will be useful,\n");
+		php_printf("but WITHOUT ANY WARRANTY; without even the implied warranty of\n");
+		php_printf("MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
+		php_printf("\n");
+		php_printf("If you did not receive a copy of the PHP license, or have any\n");
+		php_printf("questions about PHP licensing, please contact license@php.net.\n");
+	}
 }
 
 PHP_FUNCTION(study_extension_phpinfo)
