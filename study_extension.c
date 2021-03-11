@@ -14,6 +14,7 @@
 #include "php_study_extension.h"
 #include "zend_generators.h"
 #include "zend_extensions.h"
+#include "zend_constants.h"
 
 /* For compatibility with older PHP versions */
 #ifndef ZEND_PARSE_PARAMETERS_NONE
@@ -748,6 +749,16 @@ PHP_FUNCTION(study_extension_phpinfo)
 	RETURN_TRUE;
 }
 
+/* {{{ PHP_MINIT_FUNCTION
+ */
+PHP_MINIT_FUNCTION(study_extension)
+{
+	REGISTER_STRING_CONSTANT("STUDY_EXTENSION_CONFIGURE_OPTION", CONFIGURE_COMMAND, CONST_CS | CONST_PERSISTENT);
+
+	return SUCCESS;
+}
+/* }}} */
+
 /* {{{ PHP_RINIT_FUNCTION
  */
 PHP_RINIT_FUNCTION(study_extension)
@@ -810,7 +821,7 @@ zend_module_entry study_extension_module_entry = {
 	STANDARD_MODULE_HEADER,
 	"study_extension",					/* Extension name */
 	study_extension_functions,			/* zend_function_entry */
-	NULL,							/* PHP_MINIT - Module initialization */
+	PHP_MINIT(study_extension),			/* PHP_MINIT - Module initialization */
 	NULL,							/* PHP_MSHUTDOWN - Module shutdown */
 	PHP_RINIT(study_extension),			/* PHP_RINIT - Request initialization */
 	NULL,							/* PHP_RSHUTDOWN - Request shutdown */
