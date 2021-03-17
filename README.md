@@ -30,4 +30,10 @@ php-srcディレクトリにあるものとする。
 
 ### `study_extension_phpinfo(int $flag)`
 
-phpinfoをtekitoh-memdhoi.infoのデザインっぽくしたもの。
+`phpinfo`を[tekitoh-memdhoi.info](https://tekitoh-memdhoi.info)のデザインっぽくしたもの。
+
+## constants
+
+### `STUDY_EXTENSION_CONFIGURE_COMMAND`
+
+configureオプションを格納している定数。
