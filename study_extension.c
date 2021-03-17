@@ -15,6 +15,8 @@
 #include "zend_generators.h"
 #include "zend_extensions.h"
 #include "zend_constants.h"
+#include "ext/standard/html.h"
+#include "zend_highlight.h"
 
 /* For compatibility with older PHP versions */
 #ifndef ZEND_PARSE_PARAMETERS_NONE
@@ -25,7 +27,7 @@
 
 #define STUDY_COMMON (is_ref ? "&" : "")
 
-PHPAPI void study_extension_var_dump(zval *struc, int level) /* {{{ */
+PHPAPI void study_extension_var_dump(zval *struc, int level, int escape) /* {{{ */
 {
 	uint32_t count;
 	HashTable *myht;
@@ -59,7 +61,11 @@ again:
 			break;
 		case IS_STRING:
 			php_printf("%sSTRING: value=\"", STUDY_COMMON);
-			PHPWRITE(Z_STRVAL_P(struc), Z_STRLEN_P(struc));
+			if (escape) {
+				study_php_info_print_html_esc(Z_STRVAL_P(struc), Z_STRLEN_P(struc));
+			} else {
+				PHPWRITE(Z_STRVAL_P(struc), Z_STRLEN_P(struc));
+			}
 			php_printf("\", length=%zd\n", Z_STRLEN_P(struc));
 			break;
 		case IS_RESOURCE: {
@@ -86,10 +92,14 @@ again:
 					php_printf("%*c[" ZEND_LONG_FMT "]=>\n", level + 1, ' ', num);
 				} else { /* string key */
 					php_printf("%*c[\"", level + 1, ' ');
-					PHPWRITE(ZSTR_VAL(key), ZSTR_LEN(key));
+					if (escape) {
+						study_php_info_print_html_esc(ZSTR_VAL(key), ZSTR_LEN(key));
+					} else {
+						PHPWRITE(ZSTR_VAL(key), ZSTR_LEN(key));
+					}
 					php_printf("\"]=>\n");
 				}
-				study_extension_var_dump(val, level + 2);
+				study_extension_var_dump(val, level + 2, escape);
 			} ZEND_HASH_FOREACH_END();
 
 			if (level > 1 && !(GC_FLAGS(myht) & GC_IMMUTABLE)) {
@@ -148,7 +158,7 @@ again:
 							PUTS("]=>\n");
 						}
 
-						study_extension_var_dump(val, level + 2);
+						study_extension_var_dump(val, level + 2, escape);
 					}
 				} ZEND_HASH_FOREACH_END();
 				zend_release_properties(myht); /* must: Release myht */
@@ -185,7 +195,7 @@ PHP_FUNCTION(study_extension_dump)
 	ZEND_PARSE_PARAMETERS_END();
 
 	for (i = 0; i < argc; i++) {
-		study_extension_var_dump(&zv_ptr[i], 1);
+		study_extension_var_dump(&zv_ptr[i], 1, 0);
 	}
 }
 
@@ -383,7 +393,13 @@ static ZEND_COLD void study_php_print_gpcse_array(char *name, uint32_t name_leng
 
 	if ((data = zend_hash_find(&EG(symbol_table), key)) != NULL && (Z_TYPE_P(data) == IS_ARRAY)) {
 		ZEND_HASH_FOREACH_KEY_VAL(Z_ARRVAL_P(data), num_key, string_key, tmp) {
-			php_printf("$%s['", name);
+			if (!sapi_module.phpinfo_as_text) {
+				php_printf("<tr><td class=\"e\">$");
+				study_php_info_print_html_esc(name, strlen(name));
+				php_printf("['");
+			} else {
+				php_printf("$%s['", name);
+			}
 
 			if (string_key != NULL) {
 				php_printf("%s", ZSTR_VAL(string_key));
@@ -391,14 +407,29 @@ static ZEND_COLD void study_php_print_gpcse_array(char *name, uint32_t name_leng
 				php_printf(ZEND_ULONG_FMT, num_key);
 			}
 
-			php_printf("'] => ");
-
+			if (!sapi_module.phpinfo_as_text) {
+				php_printf("']</td><td class=\"v\">");
+			} else {
+				php_printf("'] => ");
+			}
 			// 面倒くさかったから、var_dump写経のときのやつをdumpする
-			study_extension_var_dump(tmp, 1);
+			study_extension_var_dump(tmp, 1, !sapi_module.phpinfo_as_text);
+
 		} ZEND_HASH_FOREACH_END();
 	}
 
 	zend_string_efree(key);
+}
+
+static ZEND_COLD int study_php_info_print_html_esc(const char *str, size_t len)
+{
+	size_t written;
+	zend_string *new_str;
+
+	new_str = php_escape_html_entities((unsigned char *) str, len, 0, ENT_QUOTES, "utf-8");
+	written = php_output_write(ZSTR_VAL(new_str), ZSTR_LEN(new_str));
+	zend_string_free(new_str);
+	return written;
 }
 
 static ZEND_COLD void php_info_print_stream_hash(const char *name, HashTable *ht)
@@ -409,7 +440,11 @@ static ZEND_COLD void php_info_print_stream_hash(const char *name, HashTable *ht
 		if (zend_hash_num_elements(ht)) {
 			int first = 1;
 
-			php_printf("\nRegisterd %s => ", name);
+			if (!sapi_module.phpinfo_as_text) {
+				php_printf("<tr><td class=\"e\">Registered %s</td><td class=\"v\">", name);
+			} else {
+				php_printf("\nRegisterd %s => ", name);
+			}
 
 			ZEND_HASH_FOREACH_STR_KEY(ht, key) {
 				if (key) {
@@ -418,9 +453,17 @@ static ZEND_COLD void php_info_print_stream_hash(const char *name, HashTable *ht
 					} else {
 						php_printf(", ");
 					}
-					php_printf("%s", ZSTR_VAL(key));
+					if (!sapi_module.phpinfo_as_text) {
+						study_php_info_print_html_esc(ZSTR_VAL(key), ZSTR_LEN(key));
+					} else {
+						php_printf("%s", ZSTR_VAL(key));
+					}
 				}
 			} ZEND_HASH_FOREACH_END();
+
+			if (!sapi_module.phpinfo_as_text) {
+				php_printf("</td></tr>\n");
+			}
 		} else {
 			char reg_name[128];
 			snprintf(reg_name, sizeof(reg_name), "Registered %s", name);
@@ -440,6 +483,52 @@ static int module_name_cmp(const void *a, const void *b)
 			((zend_module_entry *)Z_PTR(s->val))->name);
 }
 
+PHPAPI ZEND_COLD void study_info_print_css(void)
+{
+	PUTS("body { background-image: url(" TEKITOH_MEMDHOI_INFO_BACKGROUND_IMAGE "); }\n");
+	PUTS("table { width: 100%; border: 1px black solid; margin-bottom: 1px; }\n");
+	PUTS("td { word-wrap: break-word; }\n");
+	PUTS("pre { white-space: pre-wrap; }\n");
+	PUTS(".e { border: 1px black solid; width:300px; }\n");
+	PUTS(".v { border: 1px black solid; max-width:300px; }\n");
+	PUTS(".h { font-weight: bold; }\n");
+	PUTS(".body {width:1122px;margin:0 auto;overflow: hidden;font-family: \"Helvetica Neue\",Helvetica,\"ヒラギノ角ゴ ProN W3\",\"Hiragino Kaku Gothic ProN\",\"メイリオ\",Meiryo,sans-serif;}.bodyside { background-color: #ffffff;}.bodyhead {margin-bottom: 5px;height:40px; background-color: #ffffff;}.bodyheadimg {max-width: 100%; max-height: 100%;margin: 0;}.leftelements > p > a {text-align: center;}\n");
+	PUTS(".bodybody{border-image:url(" TEKITOH_MEMDHOI_INFO_BORDER_IMAGE ") 20 stretch; border-style: solid; border-width: 18px; border-color: white;margin-bottom: 10px;font-size: 0.9em; background-color: #ffffff;}}\n");
+}
+
+PHPAPI ZEND_COLD void ZEND_COLD study_php_info_print_style(void)
+{
+	php_printf("<style type=\"text/css\">\n");
+	study_info_print_css();
+	php_printf("</style>\n");
+}
+
+PHPAPI ZEND_COLD void study_php_print_info_htmlhead(void)
+{
+	php_printf("<!DOCTYPE html>\n");
+	php_printf("<html>\n");
+	php_printf("<head>\n");
+	study_php_info_print_style();
+	php_printf("<title>PHP %s - phpinfo()</title>", PHP_VERSION);
+	php_printf("<meta name=\"ROBOTS\" content=\"NOINDEX,NOFOLLOW,NOARCHIVE\">");
+	php_printf("</head>\n");
+	php_printf("<body><div id=\"body\" class=\"body\">\n");
+}
+
+PHPAPI ZEND_COLD void study_php_info_print_box_start(int flag)
+{
+	php_info_print_table_start();
+	if (!sapi_module.phpinfo_as_text) {
+		if (flag) {
+			php_printf("<tr class=\"h\"><td>\n");
+		} else {
+			php_printf("<tr class=\"v\"><td>\n");
+		}
+	} else if (!flag) {
+		php_printf("\n");
+	}
+}
+
 PHPAPI ZEND_COLD void study_php_print_info(int flag)
 {
 	zend_string *php_uname;
@@ -448,7 +537,8 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 	if (sapi_module.phpinfo_as_text) {
 		php_printf("text mode study_extension_phpinfo()\n");
 	} else {
-		php_printf("html\n");
+		study_php_print_info_htmlhead();
+		php_printf("<article class=\"bodybody\">");
 	}
 
 	if (flag & PHP_INFO_GENERAL) {
@@ -457,8 +547,19 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 
 		php_uname = php_get_uname('a');
 
+		if (!sapi_module.phpinfo_as_text) {
+			study_php_info_print_box_start(1);
+		}
+
 		// PHP バージョン
-		php_info_print_table_row(2, "PHP Version", PHP_VERSION);
+		if (!sapi_module.phpinfo_as_text) {
+			php_printf("<header id=\"bodyhead\" class=\"bodyhead\"><h1 class=\"p\">PHP Version %s</h1></header>\n", PHP_VERSION);
+		} else {
+			php_info_print_table_row(2, "PHP Version", PHP_VERSION);
+		}
+		php_info_print_box_end();
+
+		php_info_print_table_start();
 		// uname -aの結果(Linux)
 		// GetVersion関数などの結果(Windows)
 		php_info_print_table_row(2, "System", ZSTR_VAL(php_uname));
@@ -595,10 +696,14 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 
 		// Engineの表示
 		php_info_print_box_start(0);
-		php_printf("Engine:");
-		php_printf("\n");
-		php_printf("%s", zend_version);
-		php_info_print_box_end();
+		if (sapi_module.phpinfo_as_text) {
+			php_printf("Engine:");
+			php_printf("\n");
+			php_printf("%s", zend_version);
+			php_info_print_box_end();
+		} else {
+			zend_html_puts(zend_version, strlen(zend_version));
+		}
 
 		zend_string_free(php_uname);
 	}
@@ -606,8 +711,13 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 	// Configurationセクション
 	zend_ini_sort_entries();
 	if (flag & PHP_INFO_CONFIGURATION) {
-		php_printf("\n");
-		php_info_print_table_header(1, "Configuration");
+		if (sapi_module.phpinfo_as_text) {
+			php_printf("\n");
+			php_info_print_table_header(1, "Configuration");
+		} else {
+			php_printf("<hr>\n");
+			php_printf("<h2> %s </h2>\n", "Configuration");
+		}
 		if (!(flag & PHP_INFO_MODULES)) {
 			php_printf("\n");
 			php_info_print_table_header(1, "PHP Core");
@@ -676,8 +786,13 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 	if (flag & PHP_INFO_VARIABLES) {
 		zval *data;
 
-		php_printf("\n");
-		php_printf("PHP Variables");
+		if (sapi_module.phpinfo_as_text) {
+			php_printf("\n");
+			php_info_print_table_header(1, "PHP Variables");
+		} else {
+			php_printf("<hr>\n");
+			php_printf("<h2> %s </h2>\n", "PHP Variables");
+		}
 
 		php_info_print_table_start();
 		php_info_print_table_header(2, "Variable", "Value");
@@ -718,6 +833,9 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 
 	// ライセンス
 	if (flag & PHP_INFO_LICENSE) {
+		if (!sapi_module.phpinfo_as_text) {
+			php_printf("<pre>");
+		}
 		php_printf("\nPHP License\n");
 		php_printf("This program is free software; you can redistribute it and/or modify\n");
 		php_printf("it under the terms of the PHP License as published by the PHP Group\n");
@@ -729,6 +847,13 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 		php_printf("\n");
 		php_printf("If you did not receive a copy of the PHP license, or have any\n");
 		php_printf("questions about PHP licensing, please contact license@php.net.\n");
+		if (!sapi_module.phpinfo_as_text) {
+			php_printf("</pre>");
+		}
+	}
+
+	if (!sapi_module.phpinfo_as_text) {
+		php_printf("</article></body></html>");
 	}
 }
 
