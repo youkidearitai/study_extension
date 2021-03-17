@@ -27,3 +27,7 @@ php-srcディレクトリにあるものとする。
 ### `study_extension_nop()`
 
 何もしない。
+
+### `study_extension_phpinfo(int $flag)`
+
+phpinfoをtekitoh-memdhoi.infoのデザインっぽくしたもの。
