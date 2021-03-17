@@ -489,6 +489,7 @@ PHPAPI ZEND_COLD void study_info_print_css(void)
 	PUTS("table { width: 100%; border: 1px black solid; margin-bottom: 1px; }\n");
 	PUTS("td { word-wrap: break-word; }\n");
 	PUTS("pre { white-space: pre-wrap; }\n");
+	PUTS(".phplogo img { float: right; }\n");
 	PUTS(".e { border: 1px black solid; width:300px; }\n");
 	PUTS(".v { border: 1px black solid; max-width:300px; }\n");
 	PUTS(".h { font-weight: bold; }\n");
@@ -553,6 +554,19 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 
 		// PHP バージョン
 		if (!sapi_module.phpinfo_as_text) {
+			time_t the_time;
+			struct tm *ta, tmbuf;
+
+			the_time = time(NULL);
+			ta = php_localtime_r(&the_time, &tmbuf);
+
+			php_printf("<a class=\"phplogo\" href=\"http://www.php.net/\"><img border=\"0\" src=\"");
+			if (ta && (ta->tm_mon == 3) && (ta->tm_mday == 1)) {
+				php_printf("%s \" alt=\"PHP logo\"></a>", PHP_EGG_LOGO_DATA_URI);
+			} else {
+				php_printf("%s \" alt=\"PHP logo\"></a>", PHP_LOGO_DATA_URI);
+			}
+
 			php_printf("<header id=\"bodyhead\" class=\"bodyhead\"><h1 class=\"p\">PHP Version %s</h1></header>\n", PHP_VERSION);
 		} else {
 			php_info_print_table_row(2, "PHP Version", PHP_VERSION);
