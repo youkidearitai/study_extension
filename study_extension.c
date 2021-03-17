@@ -714,9 +714,9 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 			php_printf("Engine:");
 			php_printf("\n");
 			php_printf("%s", zend_version);
-			php_info_print_box_end();
 		} else {
 			zend_html_puts(zend_version, strlen(zend_version));
+			php_info_print_box_end();
 		}
 
 		zend_string_free(php_uname);
