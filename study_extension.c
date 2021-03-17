@@ -774,8 +774,12 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 
 	// 環境変数
 	if (flag & PHP_INFO_ENVIRONMENT) {
-		php_printf("\n");
-		php_printf("Environment");
+		if (!sapi_module.phpinfo_as_text) {
+			php_printf("<h2>%s</h2>", "Environment");
+		} else {
+			php_printf("\n");
+			php_info_print_table_header(1, "Environment");
+		}
 
 		php_info_print_table_start();
 		php_info_print_table_header(2, "Variable", "Value");
