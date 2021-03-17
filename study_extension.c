@@ -755,7 +755,11 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 		} ZEND_HASH_FOREACH_END();
 
 		php_printf("\n");
-		php_info_print_table_header(1, "Additional Modules");
+		if (!sapi_module.phpinfo_as_text) {
+			php_printf("<h2>%s</h2>", "Additional Modules");
+		} else {
+			php_info_print_table_header(1, "Additional Modules");
+		}
 		php_info_print_table_start();
 		php_info_print_table_header(1, "Module Name");
 		ZEND_HASH_FOREACH_PTR(&sorted_registry, module) {
