@@ -274,17 +274,9 @@ PHP_FUNCTION(study_extension_print_backtrace)
 		object = (Z_TYPE(call->This) == IS_OBJECT) ? Z_OBJ(call->This) : NULL;
 
 		if (call->func) {
-			zend_string *zend_function_name;
 			func = call->func;
-
-			if (func->common.scope && func->common.scope->trait_aliases) {
-				zend_function_name = zend_resolve_method_name(object ? object->ce : func->common.scope, func);
-			} else {
-				zend_function_name = func->common.function_name;
-			}
-
-			if (zend_function_name != NULL) {
-				function_name = ZSTR_VAL(zend_function_name);
+			if (func->common.function_name) {
+				function_name = ZSTR_VAL(func->common.function_name);
 			} else {
 				function_name = NULL;
 			}
