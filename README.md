@@ -6,6 +6,8 @@ This product includes PHP, freely available from http://www.php.net/
 
 ## INSTALL
 
+### 静的なインストール
+
 php-srcディレクトリにあるものとする。
 
     $ cd ext/
@@ -13,6 +15,22 @@ php-srcディレクトリにあるものとする。
     $ cd ../
     $ ./buildconf -f && ./configure --enable-study_extension
     $ make && make test && make install
+
+### 動的なインストール
+
+phpizeを使う。PHPの本体のインストール先を、 `--prefix=$HOME/php-master` とする。
+
+    $ git clone https://github.com/youkidearitai/study_extension
+    $ cd study_extension
+    $ ~/php-master/bin/phpize
+    $ ./configure --with-php-config=$HOME/php-master/bin/php-config
+    $ make && make test && make install
+
+#### php.ini
+
+    $ vi ~/php-master/lib/php.ini
+    extension_dir=/path/to/php_extension_dir/
+    extension=study_extension
 
 ## functions
 
