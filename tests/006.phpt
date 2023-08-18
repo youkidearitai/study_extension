@@ -14,7 +14,7 @@ error_reporting(E_ALL);
 set_error_handler("study_error_handler");
 ini_set("display_errors", "on");
 
-function study_error_handler($errorcode, $errorstring, $filename, $line, $symbols) {
+function study_error_handler($errorcode, $errorstring, $filename, $line) {
 	error_handler();
 }
 
