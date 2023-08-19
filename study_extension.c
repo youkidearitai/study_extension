@@ -895,7 +895,7 @@ static void study_standard_class_ctor(INTERNAL_FUNCTION_PARAMETERS)
 	zval *ssc = return_value;
 
 	ZEND_PARSE_PARAMETERS_NONE();
-	zend_string *str = zend_string_init("hoge", sizeof("hoge"), false);
+	zend_string *str = zend_string_init("hoge", sizeof("hoge")-1, false);
 
 	zend_update_property_str(study_standard_class, Z_OBJ_P(ssc), "name", sizeof("name") - 1, str);
 	zend_update_property_long(study_standard_class, Z_OBJ_P(ssc), "number", sizeof("number") - 1, 1000000);
@@ -917,6 +917,18 @@ void register_study_standard_class_create(void)
 	INIT_CLASS_ENTRY(ce, "study_standard_class", class_study_standard_class_methods);
 	class_entry = zend_register_internal_class_ex(&ce, NULL);
 	class_entry->ce_flags |= ZEND_ACC_NOT_SERIALIZABLE;
+
+	zval property_default_name;
+	ZVAL_UNDEF(&property_default_name);
+	zend_string *property_name = zend_string_init("name", sizeof("name") - 1, true);
+	zend_declare_typed_property(class_entry, property_name, &property_default_name, ZEND_ACC_PUBLIC, NULL, (zend_type) ZEND_TYPE_INIT_MASK(MAY_BE_STRING));
+	zend_string_release(property_name);
+
+	zval property_default_number;
+	ZVAL_UNDEF(&property_default_number);
+	zend_string *property_number = zend_string_init("number", sizeof("number") - 1, true);
+	zend_declare_typed_property(class_entry, property_number, &property_default_name, ZEND_ACC_PUBLIC, NULL, (zend_type) ZEND_TYPE_INIT_MASK(MAY_BE_LONG));
+	zend_string_release(property_number);
 
 	study_standard_class = class_entry;
 }
