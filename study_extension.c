@@ -70,7 +70,7 @@ again:
 			break;
 		case IS_RESOURCE: {
 			const char *type_name = zend_rsrc_list_get_rsrc_type(Z_RES_P(struc));
-			php_printf("%sRESOURCE: id=%d type=%s\n", STUDY_COMMON, Z_RES_P(struc)->handle, type_name ? type_name : "Unknown");
+			php_printf("%sRESOURCE: id=%ld type=%s\n", STUDY_COMMON, Z_RES_P(struc)->handle, type_name ? type_name : "Unknown");
 			break;
 		}
 		case IS_ARRAY:
@@ -535,7 +535,7 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 	}
 
 	if (flag & PHP_INFO_GENERAL) {
-		char *zend_version = get_zend_version();
+		const char *zend_version = get_zend_version();
 		char temp_api[10];
 
 		php_uname = php_get_uname('a');
@@ -738,7 +738,7 @@ PHPAPI ZEND_COLD void study_php_print_info(int flag)
 
 		zend_hash_init(&sorted_registry, zend_hash_num_elements(&module_registry), NULL, NULL, 1);
 		zend_hash_copy(&sorted_registry, &module_registry, NULL);
-		zend_hash_sort(&sorted_registry, module_name_cmp, 0);
+		zend_hash_sort(&sorted_registry, (bucket_compare_func_t) module_name_cmp, 0);
 
 		ZEND_HASH_FOREACH_PTR(&sorted_registry, module) {
 			if (module->info_func || module->version) {
