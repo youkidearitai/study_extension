@@ -421,7 +421,7 @@ static ZEND_COLD void study_php_print_gpcse_array(char *name, uint32_t name_leng
 	zend_string_efree(key);
 }
 
-static ZEND_COLD int study_php_info_print_html_esc(const char *str, size_t len)
+ZEND_COLD int study_php_info_print_html_esc(const char *str, size_t len)
 {
 	size_t written;
 	zend_string *new_str;
@@ -916,6 +916,24 @@ PHP_FUNCTION(study_standard_class_create)
 	study_standard_class_ctor(INTERNAL_FUNCTION_PARAM_PASSTHRU);
 }
 /* }}} */
+
+PHP_METHOD(study_standard_class, increment_number)
+{
+	zval *res, rv;
+	ZEND_PARSE_PARAMETERS_NONE();
+
+	res = zend_read_property(study_standard_class, Z_OBJ_P(ZEND_THIS), "number", sizeof("number") - 1, 1, &rv);
+	Z_LVAL_P(res)++;
+	zend_update_property_long(study_standard_class, Z_OBJ_P(ZEND_THIS), "number", sizeof("number") - 1, Z_LVAL_P(res));
+}
+
+ZEND_BEGIN_ARG_INFO(arginfo_study_standard_class_method_increment_number, 0)
+ZEND_END_ARG_INFO()
+
+static const zend_function_entry class_study_standard_class_methods[] = {
+    ZEND_ME(study_standard_class, increment_number, arginfo_study_standard_class_method_increment_number, ZEND_ACC_PUBLIC)
+    ZEND_FE_END
+};
 
 void register_study_standard_class_create(void)
 {
