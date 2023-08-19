@@ -127,7 +127,7 @@ again:
 			php_printf("%sOBJECT(%s)#%d (%d) {\n", STUDY_COMMON, ZSTR_VAL(class_name), Z_OBJ_HANDLE_P(struc), myht ? zend_array_count(myht) : 0);
 
 			if (myht) {
-				ZEND_HASH_FOREACH_KEY_VAL_IND(myht, num, key, val) {
+				ZEND_HASH_FOREACH_KEY_VAL(myht, num, key, val) {
 					zend_property_info *prop_info = NULL;
 
 					if (Z_TYPE_P(val) == IS_INDIRECT) {
@@ -160,7 +160,13 @@ again:
 							PUTS("]=>\n");
 						}
 
-						study_extension_var_dump(val, level + 2, escape);
+						if (Z_TYPE_P(val) == IS_UNDEF) {
+							zend_string *type_str = zend_type_to_string(prop_info->type);
+							php_printf("%*cuninitialized(%s)\n", level + 1, ' ', ZSTR_VAL(type_str));
+							zend_string_release(type_str);
+						} else {
+							study_extension_var_dump(val, level + 2, escape);
+						}
 					}
 				} ZEND_HASH_FOREACH_END();
 				zend_release_properties(myht); /* must: Release myht */
