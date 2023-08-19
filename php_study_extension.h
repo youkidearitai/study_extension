@@ -6,7 +6,11 @@
 extern zend_module_entry study_extension_module_entry;
 # define phpext_study_extension_ptr &study_extension_module_entry
 
-# define PHP_STUDY_EXTENSION_VERSION "0.1.0"
+# define PHP_STUDY_EXTENSION_VERSION "0.2.0"
+
+static const zend_function_entry class_study_standard_class_methods[] = {
+    ZEND_FE_END
+};
 
 PHPAPI void study_extension_var_dump(zval *struc, int level, int escape);
 static ZEND_COLD int study_php_info_print_html_esc(const char *str, size_t len);

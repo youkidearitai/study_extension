@@ -27,6 +27,8 @@
 
 #define STUDY_COMMON (is_ref ? "&" : "")
 
+zend_class_entry *study_standard_class;
+
 PHPAPI void study_extension_var_dump(zval *struc, int level, int escape) /* {{{ */
 {
 	uint32_t count;
@@ -888,6 +890,37 @@ PHP_FUNCTION(study_extension_phpinfo)
 	RETURN_TRUE;
 }
 
+static void study_standard_class_ctor(INTERNAL_FUNCTION_PARAMETERS)
+{
+	zval *ssc = return_value;
+
+	ZEND_PARSE_PARAMETERS_NONE();
+	zend_string *str = zend_string_init("hoge", sizeof("hoge"), false);
+
+	zend_update_property_str(study_standard_class, Z_OBJ_P(ssc), "name", sizeof("name") - 1, str);
+	zend_update_property_long(study_standard_class, Z_OBJ_P(ssc), "number", sizeof("number") - 1, 1000000);
+	zend_string_release(str);
+}
+
+/* {{{ PHP_FUNCTION(study_standard_class_create)
+ */
+PHP_FUNCTION(study_standard_class_create)
+{
+	object_init_ex(return_value, study_standard_class);
+	study_standard_class_ctor(INTERNAL_FUNCTION_PARAM_PASSTHRU);
+}
+/* }}} */
+
+void register_study_standard_class_create(void)
+{
+	zend_class_entry ce, *class_entry;
+	INIT_CLASS_ENTRY(ce, "study_standard_class", class_study_standard_class_methods);
+	class_entry = zend_register_internal_class_ex(&ce, NULL);
+	class_entry->ce_flags |= ZEND_ACC_NOT_SERIALIZABLE;
+
+	study_standard_class = class_entry;
+}
+
 /* {{{ PHP_MINIT_FUNCTION
  */
 PHP_MINIT_FUNCTION(study_extension)
@@ -898,6 +931,7 @@ PHP_MINIT_FUNCTION(study_extension)
 	REGISTER_STRING_CONSTANT("STUDY_EXTENSION_CONFIGURE_COMMAND", "", CONST_CS | CONST_PERSISTENT);
 #endif
 
+	register_study_standard_class_create();
 	return SUCCESS;
 }
 /* }}} */
@@ -944,6 +978,9 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO(arginfo_study_extension_nop, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO(arginfo_study_standard_class_create, 0)
+ZEND_END_ARG_INFO()
+
 /* }}} */
 
 
@@ -954,6 +991,7 @@ static const zend_function_entry study_extension_functions[] = {
 	PHP_FE(study_extension_print_backtrace,		arginfo_study_extension_print_backtrace)
 	PHP_FE(study_extension_phpinfo,		arginfo_study_extension_phpinfo)
 	PHP_FE(study_extension_nop,		arginfo_study_extension_nop)
+	PHP_FE(study_standard_class_create,		arginfo_study_standard_class_create)
 	PHP_FE_END
 };
 /* }}} */
