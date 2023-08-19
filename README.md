@@ -32,6 +32,21 @@ phpizeを使う。PHPの本体のインストール先を、 `--prefix=$HOME/php
     extension_dir=/path/to/php_extension_dir/
     extension=study_extension
 
+## classes
+
+### `study_standard_class`
+
+プロパティを持っているクラス。
+
+```
+OBJECT(study_standard_class)#1 (0) {
+  ["name"]=>
+  uninitialized(string)
+  ["number"]=>
+  uninitialized(int)
+}
+```
+
 ## functions
 
 ### `study_extension_dump( mixed $value )`
@@ -49,6 +64,19 @@ phpizeを使う。PHPの本体のインストール先を、 `--prefix=$HOME/php
 ### `study_extension_phpinfo(int $flag)`
 
 `phpinfo`を[tekitoh-memdhoi.info](https://tekitoh-memdhoi.info)のデザインっぽくしたもの。
+
+### `study_standard_class_create()`
+
+`study_standard_class` にプロパティに値を入れて返す
+
+```
+OBJECT(study_standard_class)#1 (2) {
+  ["name"]=>
+  STRING: value="hoge", length=4
+  ["number"]=>
+  LONG: 1000000
+}
+```
 
 ## constants
 
